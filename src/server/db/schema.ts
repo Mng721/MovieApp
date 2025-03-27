@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { index, integer, pgTableCreator, primaryKey, serial, varchar } from "drizzle-orm/pg-core";
+import { index, integer, pgTableCreator, primaryKey, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
 /**
@@ -56,6 +56,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.roleId],
     references: [roles.id],
   }),
+  favoriteMovies: many(favoriteMovies),
 }));
 
 
@@ -132,6 +133,15 @@ export const verificationTokens = createTable(
   (t) => [primaryKey({ columns: [t.identifier, t.token] })]
 );
 
+// Thêm bảng favorite_movies
+export const favoriteMovies = createTable("favorite_movies", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  movieId: integer("movie_id").notNull(), // ID phim từ TMDB
+  title: varchar("title",{length: 255}).notNull(), // Tiêu đề phim
+  posterPath: varchar("poster_path"), // Đường dẫn ảnh poster từ TMDB
+  addedAt: timestamp("added_at").defaultNow(),
+});
 
 // Định nghĩa quan hệ
 export const rolesRelations = relations(roles, ({ many, one }) => ({
@@ -154,3 +164,9 @@ export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => 
   }),
 }));
 
+export const favoriteMoviesRelations = relations(favoriteMovies, ({ one }) => ({
+  user: one(users, {
+    fields: [favoriteMovies.userId],
+    references: [users.id],
+  }),
+}));

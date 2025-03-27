@@ -2,7 +2,7 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 import GoogleProvider from "next-auth/providers/google";
-
+import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "~/server/db";
 import {
   accounts,
@@ -10,6 +10,7 @@ import {
   users,
   verificationTokens,
 } from "~/server/db/schema";
+import bcrypt from "bcryptjs";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -44,6 +45,25 @@ export const authConfig = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const user = await db.query.users.findFirst({
+          where: (users, { eq }) => eq(users.email, credentials.email as string),
+        });
+
+        if (!user || !user.password) return null;
+
+        const isValid = await bcrypt.compare(credentials.password as string, user.password);
+        if (!isValid) return null;
+
+        return { id: user.id.toString(), email: user.email, roleId: user.roleId };
+      },
+    }),
     /**
      * ...add more providers here.
      *
@@ -60,13 +80,26 @@ export const authConfig = {
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
+  session: {
+    strategy: "jwt", // Sử dụng JWT để callback được gọi
+  },
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.roleId = user.roleId;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id as string;
+        session.user.roleId = token.roleId as number;
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/", // Đảm bảo redirect đúng tới trang login
   },
 } satisfies NextAuthConfig;
