@@ -1,31 +1,40 @@
 import { auth } from "~/server/auth";
 import Link from "next/link";
+import MovieCarousel from "./_components/MovieCarousel";
 
 export default async function Home() {
   const session = await auth();
   return (
-    <div className="p-4">
-      <h1 className="text-2xl">Home</h1>
-      {session ? (
-        <div>
-          <p>Welcome, {session.user.email} </p>
-          <p>role: {session.user.roleId}</p>
-        </div>
+    <div className="bg-gray-900 min-h-screen">
+      {/* Carousel cho phim phổ biến */}
+      <MovieCarousel
+        url="/movie/popular"
+        title="Phim Phổ Biến"
+      />
 
-      ) : (
-        <div>
-          <Link href="/login" className="text-blue-500">Login</Link> |{" "}
-          <Link href="/register" className="text-blue-500">Register</Link>
-        </div>
-      )}
+      {/* Carousel cho phim sắp chiếu */}
+      <MovieCarousel
+        url="/movie/upcoming"
+        title="Phim Sắp Chiếu"
+      />
 
-      <Link
-        href={session ? "/api/auth/signout" : "/api/auth/signin"}
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
-      >
-
-        {session ? "Sign out" : ""}
-      </Link>
+      {/* Nội dung trang chủ khác */}
+      <div className="p-4">
+        <h1 className="text-2xl text-white">Home</h1>
+        {session ? (
+          <p className="text-white">Welcome, {session.user.email}</p>
+        ) : (
+          <div>
+            <Link href="/login" className="text-blue-500">
+              Login
+            </Link>{" "}
+            |{" "}
+            <Link href="/register" className="text-blue-500">
+              Register
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

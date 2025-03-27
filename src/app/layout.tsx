@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { SessionProvider } from "next-auth/react";
+import TopNav from "./_components/topNav";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body>
         <TRPCReactProvider>
           <SessionProvider>
+            <TopNav></TopNav>
             {children}
           </SessionProvider>
 
