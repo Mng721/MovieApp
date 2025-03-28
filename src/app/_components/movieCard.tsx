@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 interface Movie {
+  vote_count: number;
   id: number;
   title: string;
   poster_path: string;
@@ -20,15 +21,16 @@ export default function MovieCard({ movie }: MovieCardProps) {
           src={`https://image.tmdb.org/t/p/w300${movie.poster_path}`}
           alt={movie.title}
           className="w-full h-64 object-cover"
+          onError={(e) => (e.currentTarget.src = "/assets/images/movie.jpg")}
         />
         <div className="p-4">
           <h3 className="text-white font-semibold truncate">{movie.title}</h3>
           <p className="text-gray-400 text-sm">{movie.release_date}</p>
-          {movie.vote_average && (
+          {movie.vote_average ? (
             <p className="text-yellow-400 text-sm mt-1">
               ⭐ {movie.vote_average.toFixed(1)}/10
             </p>
-          )}
+          ) : (<div className="text-yellow-400 text-sm mt-1">⭐ N/A</div>)}
         </div>
       </div>
     </Link>

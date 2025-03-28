@@ -1,14 +1,19 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import MovieCard from "../_components/movieCard";
 
-export default function MoviesPage() {
+export default function MoviesPage({
+    searchParams,
+}: {
+    searchParams: { q?: string };
+}) {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const [query, setQuery] = useState("");
+    const query = searchParams.q || "";
 
     // Gọi API TMDB để tìm phim
     const { data: movies, refetch } = api.movies.searchMovies.useQuery(
@@ -32,10 +37,6 @@ export default function MoviesPage() {
         onSuccess: () => refetchFavorites(),
     });
 
-    const handleSearch = () => {
-        refetch();
-    };
-
     // Xử lý redirect khi không có session
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -54,45 +55,13 @@ export default function MoviesPage() {
     }
 
     return (
-        <div className="p-4">
-            <h1 className="text-2xl mb-4">Tìm kiếm phim</h1>
-            <div className="flex gap-2 mb-4">
-                <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Nhập tên phim..."
-                    className="p-2 border w-64"
-                />
-                <button onClick={handleSearch} className="bg-blue-500 text-white p-2">
-                    Tìm kiếm
-                </button>
-            </div>
-
+        <div className="p-4 bg-gray-900">
+            <h1 className="text-2xl mb-4 text-white">Tìm kiếm phim</h1>
             {/* Danh sách phim từ TMDB */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                {movies?.map((movie: any) => (
-                    <Link href={`/movie/${movie.id}`}>
-                        <div key={movie.id} className="border p-4">
-                            <img
-                                src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
-                                alt={movie.title}
-                                className="mb-2"
-                            />
-                            <h2 className="text-lg">{movie.title}</h2>
-                            <button
-                                onClick={() =>
-                                    addFavorite.mutate({
-                                        movieId: movie.id,
-                                        title: movie.title,
-                                        posterPath: movie.poster_path,
-                                    })
-                                }
-                                className="bg-green-500 text-white p-2 mt-2"
-                            >
-                                Thêm vào yêu thích
-                            </button>
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                {movies?.map((movie: any, index: number) => (
+                    <Link href={`/movie/${movie.id}`} key={`search-${index}`}>
+                        <MovieCard movie={movie}></MovieCard>
                     </Link>
                 ))}
             </div>
@@ -100,8 +69,8 @@ export default function MoviesPage() {
             {/* Danh sách phim yêu thích */}
             <h1 className="text-2xl mb-4">Phim yêu thích</h1>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {favorites?.map((fav) => (
-                    <Link href={`/movie/${fav.movieId}`}>
+                {favorites?.map((fav, index: number) => (
+                    <Link href={`/movie/${fav.movieId}`} key={`fav-${index}`}>
                         <div key={fav.id} className="border p-4">
                             <img
                                 src={`https://image.tmdb.org/t/p/w200${fav.posterPath}`}

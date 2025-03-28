@@ -1,4 +1,10 @@
+"use client";
+import { useState, useEffect, use } from "react";
 import axios from "axios";
+import { api } from "~/trpc/react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface Genre {
     id: number;
@@ -6,6 +12,7 @@ interface Genre {
 }
 
 interface CrewMember {
+    profile_path: any;
     id: number;
     name: string;
     job: string;
@@ -25,6 +32,7 @@ interface Video {
 }
 
 interface Movie {
+    vote_count: number;
     id: number;
     title: string;
     poster_path: string;
@@ -43,41 +51,64 @@ interface Movie {
     };
 }
 
-interface MoviePageProps {
-    params: { id: string };
-}
+export default function MoviePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const [movie, setMovie] = useState<Movie | null>(null);
 
-export default async function MoviePage({ params }: MoviePageProps) {
-    const { id } = params;
+    useEffect(() => {
+        const fetchMovie = async () => {
+            const response = await axios.get(
+                `https://api.themoviedb.org/3/movie/${id}`,
+                {
+                    params: {
+                        api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
+                        append_to_response: "credits,videos",
+                    },
+                }
+            );
+            setMovie(response.data);
+        };
+        fetchMovie();
+    }, [id]);
 
-    // Lấy thông tin chi tiết phim từ TMDB, bao gồm credits và videos
-    const response = await axios.get(
-        `https://api.themoviedb.org/3/movie/${id}`,
-        {
-            params: {
-                api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
-                append_to_response: "credits,videos", // Lấy thêm credits và videos
-            },
-        }
-    );
-    const movie: Movie = response.data;
+    const { data: favorites, refetch: refetchFavorites } =
+        api.movies.getFavorites.useQuery(undefined, {
+            enabled: !!session,
+        });
 
-    // Lấy đạo diễn từ credits
+    const isFavorite = favorites?.some((fav) => fav.movieId === parseInt(id));
+
+    const addFavorite = api.movies.addFavorite.useMutation({
+        onSuccess: () => {
+            refetchFavorites();
+            alert("Đã thêm vào yêu thích!");
+        },
+    });
+
+    const removeFavorite = api.movies.removeFavorite.useMutation({
+        onSuccess: () => {
+            refetchFavorites();
+            alert("Đã xóa khỏi yêu thích!");
+        },
+    });
+
+    if (!movie) {
+        return <div>Đang tải...</div>;
+    }
+
     const director = movie.credits.crew.find((member) => member.job === "Director");
-
-    // Lấy 5 diễn viên đầu tiên
     const topCast = movie.credits.cast.slice(0, 5);
-
-    // Lấy trailer (ưu tiên YouTube)
     const trailer = movie.videos.results.find(
         (video) => video.type === "Trailer" && video.site === "YouTube"
     );
 
     return (
-        <div className="bg-gray-900 min-h-screen text-white">
-            {/* Background với backdrop */}
+        <div className="bg-gray-900 text-white flex flex-col min-h-screen">
+            {/* Thêm pt-16 (padding-top) để bù đắp chiều cao của navbar */}
             <div
-                className="relative bg-cover bg-center h-96"
+                className="bg-cover bg-center h-[440px] max-md:h-fit"
                 style={{
                     backgroundImage: movie.backdrop_path
                         ? `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
@@ -85,44 +116,91 @@ export default async function MoviePage({ params }: MoviePageProps) {
                     backgroundColor: movie.backdrop_path ? "transparent" : "gray",
                 }}
             >
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center">
+                <div className="bg-gray-900/50 flex items-center h-full max-md:py-6">
                     <div className="container mx-auto px-4 flex flex-col md:flex-row gap-6">
-                        {/* Poster */}
                         <img
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                             alt={movie.title}
                             className="w-48 md:w-64 rounded-lg shadow-lg"
                         />
-                        {/* Thông tin chính */}
                         <div className="flex-1">
                             <h1 className="text-4xl font-bold">{movie.title}</h1>
                             <p className="text-gray-400 mt-2">
                                 {movie.release_date} • {movie.runtime} phút •{" "}
-                                {movie.genres.map((genre) => genre.name).join(", ")}
+                                {movie.genres.map((genre, index) => (
+                                    <span key={genre.id}>
+                                        <Link href={`/genres/${genre.id}`} className="hover:text-blue-500">
+                                            {genre.name}
+                                        </Link>
+                                        {index < movie.genres.length - 1 && ", "}
+                                    </span>
+                                ))}
                             </p>
                             <p className="text-yellow-400 mt-2">
-                                ⭐ {movie.vote_average.toFixed(1)}/10
+                                ⭐ {movie.vote_average.toFixed(1)}/10 <span className="text-gray-400">{`(${movie.vote_count})`}</span>
                             </p>
                             <p className="mt-4">{movie.overview}</p>
+                            {session && (
+                                <div className="mt-4">
+                                    {isFavorite ? (
+                                        <button
+                                            onClick={() => {
+                                                const favorite = favorites?.find(
+                                                    (fav) => fav.movieId === parseInt(id)
+                                                );
+                                                if (favorite) {
+                                                    removeFavorite.mutate({ id: favorite.id });
+                                                }
+                                            }}
+                                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+                                        >
+                                            Xóa khỏi yêu thích
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() =>
+                                                addFavorite.mutate({
+                                                    movieId: movie.id,
+                                                    title: movie.title,
+                                                    posterPath: movie.poster_path,
+                                                })
+                                            }
+                                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                                        >
+                                            Thêm vào yêu thích
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Thông tin chi tiết */}
             <div className="container mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Cột bên trái: Đạo diễn và Trailer */}
+                <div className="md:grid max-md:flex max-md:flex-col md:grid-cols-3 gap-8">
                     <div className="md:col-span-1">
-                        {/* Đạo diễn */}
                         {director && (
                             <div className="mb-6">
-                                <h2 className="text-2xl font-semibold">Đạo diễn</h2>
-                                <p className="text-gray-300 mt-2">{director.name}</p>
+                                <h2 className="text-2xl font-semibold mb-4">Đạo diễn</h2>
+                                <Link href={`/director/${director.id}`} className="flex items-center gap-4 hover:bg-gray-800 p-2 rounded">
+                                    {director.profile_path ? (
+                                        <img
+                                            src={`https://image.tmdb.org/t/p/w200${director.profile_path}`}
+                                            alt={director.name}
+                                            className="w-12 h-12 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center">
+                                            <span className="text-gray-400">N/A</span>
+                                        </div>
+                                    )}
+                                    <p className="text-gray-300 mt-2">
+                                        {director.name}
+                                    </p>
+                                </Link>
                             </div>
                         )}
-
-                        {/* Trailer */}
                         {trailer && (
                             <div>
                                 <h2 className="text-2xl font-semibold">Trailer</h2>
@@ -140,31 +218,30 @@ export default async function MoviePage({ params }: MoviePageProps) {
                             </div>
                         )}
                     </div>
-
-                    {/* Cột bên phải: Diễn viên và Thông tin khác */}
                     <div className="md:col-span-2">
-                        {/* Diễn viên */}
                         <div className="mb-6">
                             <h2 className="text-2xl font-semibold">Diễn viên</h2>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
                                 {topCast.map((actor) => (
-                                    <div key={actor.id} className="flex items-center gap-3">
-                                        {actor.profile_path ? (
-                                            <img
-                                                src={`https://image.tmdb.org/t/p/w200${actor.profile_path}`}
-                                                alt={actor.name}
-                                                className="w-12 h-12 rounded-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center">
-                                                <span className="text-gray-400">N/A</span>
+                                    <Link href={`/actor/${actor.id}`} key={actor.id}>
+                                        <div className="flex items-center gap-3 hover:bg-gray-800 p-2 rounded">
+                                            {actor.profile_path ? (
+                                                <img
+                                                    src={`https://image.tmdb.org/t/p/w200${actor.profile_path}`}
+                                                    alt={actor.name}
+                                                    className="w-12 h-12 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center">
+                                                    <span className="text-gray-400">N/A</span>
+                                                </div>
+                                            )}
+                                            <div>
+                                                <p className="text-gray-300">{actor.name}</p>
+                                                <p className="text-gray-500 text-sm">{actor.character}</p>
                                             </div>
-                                        )}
-                                        <div>
-                                            <p className="text-gray-300">{actor.name}</p>
-                                            <p className="text-gray-500 text-sm">{actor.character}</p>
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         </div>
