@@ -57,6 +57,8 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     references: [roles.id],
   }),
   favoriteMovies: many(favoriteMovies),
+  comments: many(comments),
+  commentReplies: many(commentReplies),
 }));
 
 
@@ -143,6 +145,24 @@ export const favoriteMovies = createTable("favorite_movies", {
   addedAt: timestamp("added_at").defaultNow(),
 });
 
+// Thêm bảng comment
+export const comments = createTable("comments", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  movieId: integer("movie_id").notNull(),
+  content: varchar("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Thêm bảng trả lời comment
+export const commentReplies = createTable("comment_replies", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  commentId: integer("comment_id").notNull().references(() => comments.id),
+  content: varchar("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Định nghĩa quan hệ
 export const rolesRelations = relations(roles, ({ many, one }) => ({
   users: many(users),
@@ -168,5 +188,24 @@ export const favoriteMoviesRelations = relations(favoriteMovies, ({ one }) => ({
   user: one(users, {
     fields: [favoriteMovies.userId],
     references: [users.id],
+  }),
+}));
+
+export const commentsRelations = relations(comments, ({ many, one }) => ({
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+  replies: many(commentReplies),
+}));
+
+export const commentRepliesRelations = relations(commentReplies, ({ one }) => ({
+  user: one(users, {
+    fields: [commentReplies.userId],
+    references: [users.id],
+  }),
+  comment: one(comments, {
+    fields: [commentReplies.commentId],
+    references: [comments.id],
   }),
 }));

@@ -18,23 +18,6 @@ export default async function Home() {
         title="Phim Sắp Chiếu"
       />
 
-      {/* Nội dung trang chủ khác */}
-      <div className="p-4">
-        <h1 className="text-2xl text-white">Home</h1>
-        {session ? (
-          <p className="text-white">Welcome, {session.user.email}</p>
-        ) : (
-          <div>
-            <Link href="/login" className="text-blue-500">
-              Login
-            </Link>{" "}
-            |{" "}
-            <Link href="/register" className="text-blue-500">
-              Register
-            </Link>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

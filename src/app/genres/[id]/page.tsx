@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { api } from "~/trpc/react";
 import Link from "next/link";
 import MovieCard from "~/app/_components/movieCard";
@@ -17,8 +17,8 @@ interface GenrePageProps {
     params: { id: string };
 }
 
-export default function GenrePage({ params }: GenrePageProps) {
-    const { id } = params;
+export default function GenrePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const genreId = parseInt(id);
 
     const router = useRouter();
@@ -75,9 +75,9 @@ export default function GenrePage({ params }: GenrePageProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {movies.length > 0 ? (
                     movies.map((movie: Movie) => (
-                        <Link key={movie.id} href={`/movies/${movie.id}`}>
+                        <div key={movie.id}>
                             <MovieCard movie={movie} />
-                        </Link>
+                        </div>
                     ))
                 ) : (
                     <p className="text-gray-400">Không có phim nào thuộc thể loại này.</p>

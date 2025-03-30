@@ -61,7 +61,7 @@ export const authConfig = {
         const isValid = await bcrypt.compare(credentials.password as string, user.password);
         if (!isValid) return null;
 
-        return { id: user.id.toString(), email: user.email, roleId: user.roleId };
+        return { id: user.id.toString(), email: user.email, roleId: user.roleId, image:user.image };
       },
     }),
     /**
@@ -88,6 +88,7 @@ export const authConfig = {
       if (user) {
         token.id = user.id;
         token.roleId = user.roleId;
+        token.avatar = user.image; // Thêm avatar vào token
       }
       return token;
     },
@@ -95,6 +96,7 @@ export const authConfig = {
       if (token) {
         session.user.id = token.id as string;
         session.user.roleId = token.roleId as number;
+        session.user.image = token.avatar as string | undefined; // Thêm avatar vào session
       }
       return session;
     },

@@ -20,10 +20,11 @@ interface Genre {
 export default function Navbar() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(false); // State cho menu mobile
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false); // State cho dropdown người dùng
 
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -50,13 +51,26 @@ export default function Navbar() {
         };
     }, []);
 
-    const searchRef = useRef<HTMLInputElement>(null);
+    const searchRef = useRef<HTMLDivElement>(null);
+    const userRef = useRef<HTMLDivElement>(null);
 
     // Đóng thanh tìm kiếm khi nhấp ra ngoài
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
                 setIsSearchOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (userRef.current && !userRef.current.contains(event.target as Node)) {
+                setIsUserDropdownOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -76,7 +90,7 @@ export default function Navbar() {
 
     const handleSignOut = async () => {
         await signOut({ redirect: false });
-        router.push("/login");
+        router.push("/")
         router.refresh();
     };
 
@@ -94,10 +108,6 @@ export default function Navbar() {
             setSearchQuery("");
         }
     };
-    const handleGenreSelect = (genreId: number) => {
-        router.push(`/search?genreId=${genreId}`);
-        setIsDropdownOpen(false);
-    };
     return (
         <nav className="top-0 left-0 w-full bg-gray-800 text-white p-4 z-50">
             <div className="container mx-auto flex justify-between items-center">
@@ -106,10 +116,12 @@ export default function Navbar() {
                         MovieApp
                     </Link>
 
-                    <div className="relative mx-4">
-                        <form onSubmit={handleSearchSubmit} >
+                    <div className="relative mx-4"
+                        ref={searchRef}
+                    >
+                        <form onSubmit={handleSearchSubmit}
+                        >
                             <input
-                                ref={searchRef}
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -157,7 +169,7 @@ export default function Navbar() {
                     <div className="relative">
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="hover:text-gray-300 flex items-center gap-1"
+                            className="hover:text-gray-300 flex items-center gap-1 cursor-pointer"
                         >
                             Genres
                             <svg
@@ -197,12 +209,45 @@ export default function Navbar() {
                         </Link>
                     )}
                     {status === "authenticated" ? (
-                        <button
-                            onClick={handleSignOut}
-                            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded"
-                        >
-                            Sign Out
-                        </button>
+                        <div className="relative" ref={userRef}>
+                            <button
+                                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                                className="flex items-center gap-2 cursor-pointer"
+                            >
+                                {session.user.image ? (
+                                    <img
+                                        src={session.user.image}
+                                        alt="Avatar"
+                                        className="w-8 h-8 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden">
+                                        <span className="text-gray-400">N/A</span>
+                                    </div>
+                                )}
+                            </button>
+                            {isUserDropdownOpen && (
+                                <div className="absolute top-full right-0 bg-gray-700 rounded shadow-lg mt-2 z-50 w-48">
+                                    <div className="truncate p-2">
+                                        Xin chào <span className="italic"> {" "}{session.user.name ?? session.user.email}</span>
+                                    </div>
+                                    <hr className="opacity-30"></hr>
+                                    <Link
+                                        href="/user/account"
+                                        onClick={() => setIsUserDropdownOpen(false)}
+                                        className="block hover:bg-gray-600 p-2 text-center"
+                                    >
+                                        Quản lý tài khoản
+                                    </Link>
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="block w-full text-center hover:bg-gray-600 p-2 cursor-pointer"
+                                    >
+                                        Đăng xuất
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     ) : (
                         <Link
                             href="/login"
@@ -239,21 +284,55 @@ export default function Navbar() {
                     <Link href="/" className="block hover:text-gray-300">
                         Home
                     </Link>
-                    <Link href="/movie" className="block hover:text-gray-300">
+                    <Link href="/movies" className="block hover:text-gray-300">
                         Movies
                     </Link>
+                    <div>
+                        <button
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="block hover:text-gray-300 w-full text-left"
+                        >
+                            Genres
+                        </button>
+                        {isDropdownOpen && (
+                            <div className="pl-4 space-y-1 py-2">
+                                {genres.map((genre: Genre) => (
+                                    <Link
+                                        key={genre.id}
+                                        href={`/genres/${genre.id}`}
+                                        onClick={() => {
+                                            setIsDropdownOpen(false);
+                                            setIsOpen(false);
+                                        }}
+                                        className="block hover:text-gray-300"
+                                    >
+                                        {genre.name}
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     {isAdmin && (
                         <Link href="/admin" className="block hover:text-gray-300">
                             Admin
                         </Link>
                     )}
                     {status === "authenticated" ? (
-                        <button
-                            onClick={handleSignOut}
-                            className="block w-full text-left bg-red-500 hover:bg-red-600 px-4 py-2 rounded"
-                        >
-                            Sign Out
-                        </button>
+                        <>
+                            <Link
+                                href="/user/account"
+                                onClick={() => setIsOpen(false)}
+                                className="block hover:text-gray-300"
+                            >
+                                Quản lý tài khoản
+                            </Link>
+                            <button
+                                onClick={handleSignOut}
+                                className="block w-full text-left bg-red-500 hover:bg-red-600 px-4 py-2 rounded"
+                            >
+                                Đăng xuất
+                            </button>
+                        </>
                     ) : (
                         <Link
                             href="/login"
