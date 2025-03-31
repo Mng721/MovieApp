@@ -1,7 +1,6 @@
 # MovieApp - Ứng dụng Xem Phim và TV Series
 
-![MovieApp Banner](https://via.placeholder.com/1200x400.png?text=MovieApp+Banner)  
-_(Bạn có thể thay thế link ảnh banner bằng ảnh thực tế của dự án)_
+![MovieApp Banner](https://via.placeholder.com/1200x400.png?text=MovieApp+Banner)
 
 ## Giới thiệu
 
@@ -25,6 +24,26 @@ _(Bạn có thể thay thế link ảnh banner bằng ảnh thực tế của d�
 - **API**: TMDB API (The Movie Database)
 - **Xác thực**: NextAuth.js
 - **Khác**: TypeScript, Axios, Date-fns
+
+## Giao diện và tính năng
+
+Dưới đây là một số ảnh chụp màn hình của **MovieApp**:
+
+### Trang chủ
+
+![Trang chủ](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/home-page.png)
+
+### Chi tiết phim
+
+![Chi tiết phim](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/movie-detail-page.pngpng)
+
+### Chi tiết diễn viên
+
+![Chi tiết diễn viên](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/actor-page.png)
+
+### Lọc phim theo thể loại
+
+![Lọc phim theo thể loại](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/.png)
 
 ## Cài đặt và chạy dự án
 
