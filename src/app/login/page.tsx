@@ -20,12 +20,13 @@ export default function Login() {
 
     return (
         <div className="flex min-h-screen items-center justify-center">
-            <div className="space-y-4">
+            <div className="space-y-4 flex flex-col items-center">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <input name="email" type="email" placeholder="Email" className="block w-64 p-2 border" />
                     <input name="password" type="password" placeholder="Password" className="block w-64 p-2 border" />
-                    <button type="submit" className="bg-blue-500 text-white p-2">Login</button>
+                    <button type="submit" className="bg-blue-500 text-white p-2 ">Login</button>
                 </form>
+                <div className="text-sm self-end">Bạn chưa có tài khoản, <span onClick={() => router.push("/register")} className="cursor-pointer hover:opacity-70 text-orange-600">đăng kí ngay</span></div>
                 <button
                     onClick={() => signIn("google", { callbackUrl: '/' })}
                     className="bg-red-500 text-white p-2"

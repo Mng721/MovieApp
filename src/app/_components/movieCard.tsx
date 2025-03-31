@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FaRegPlayCircle } from "react-icons/fa";
 interface Movie {
-  vote_count: number;
+  vote_count?: number;
   id: number;
   title: string;
   poster_path: string;

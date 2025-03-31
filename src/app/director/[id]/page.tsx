@@ -19,6 +19,8 @@ interface MovieCredit {
     title: string;
     poster_path: string | null;
     release_date: string;
+    vote_count: number;
+    vote_average: number
 }
 
 
@@ -27,6 +29,7 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
     const [director, setDirector] = useState<Director | null>(null);
     const [credits, setCredits] = useState<MovieCredit[]>([]);
 
+    console.log(credits)
     // Lấy thông tin đạo diễn và danh sách phim
     useEffect(() => {
         const fetchDirectorDetails = async () => {
@@ -120,10 +123,12 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
                             <div key={credit.id}>
                                 <MovieCard
                                     movie={{
+                                        vote_count: credit.vote_count,
                                         id: credit.id,
                                         title: credit.title,
                                         poster_path: credit.poster_path || "",
                                         release_date: credit.release_date,
+                                        vote_average: credit.vote_average
                                     }}
                                 />
                             </div>

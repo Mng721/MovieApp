@@ -148,8 +148,9 @@ export const favoriteMovies = createTable("favorite_movies", {
 // Thêm bảng comment
 export const comments = createTable("comments", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  movieId: integer("movie_id").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  movieId: integer("movie_id"),
+  tvSeriesId: integer("tv_series_id"), // Thêm cột tvSeriesId
   content: varchar("content").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -157,8 +158,8 @@ export const comments = createTable("comments", {
 // Thêm bảng trả lời comment
 export const commentReplies = createTable("comment_replies", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  commentId: integer("comment_id").notNull().references(() => comments.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  commentId: integer("comment_id").notNull().references(() => comments.id, { onDelete: "cascade" }),
   content: varchar("content").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

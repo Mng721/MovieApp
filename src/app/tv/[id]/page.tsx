@@ -1,19 +1,20 @@
 "use client";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { api } from "~/trpc/react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import MovieCard from "~/app/_components/movieCard";
+import TVSeriesCard from "~/app/_components/tvSeriesCard";
+
 interface Genre {
     id: number;
     name: string;
 }
 
 interface CrewMember {
-    profile_path: any;
     id: number;
     name: string;
     job: string;
@@ -24,6 +25,12 @@ interface CastMember {
     name: string;
     character: string;
     profile_path: string | null;
+}
+
+interface Video {
+    key: string;
+    type: string;
+    site: string;
 }
 
 interface Comment {
@@ -47,22 +54,16 @@ interface Reply {
     userAvatar: string | null;
 }
 
-interface Video {
-    key: string;
-    type: string;
-    site: string;
-}
-
-interface Movie {
-    vote_count: number;
+interface TVSeries {
     id: number;
-    title: string;
+    name: string;
     poster_path: string;
     backdrop_path: string | null;
     overview: string;
-    release_date: string;
+    first_air_date: string;
     genres: Genre[];
-    runtime: number;
+    number_of_seasons: number;
+    number_of_episodes: number;
     vote_average: number;
     credits: {
         crew: CrewMember[];
@@ -73,27 +74,29 @@ interface Movie {
     };
 }
 
-
-interface RelatedMovie {
-    vote_count: number;
+interface RelatedTVSeries {
     id: number;
-    title: string;
+    name: string;
     poster_path: string;
-    release_date: string;
+    first_air_date: string;
 }
 
-export default function MoviePage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+interface TVSeriesPageProps {
+    params: { id: string };
+}
+
+export default function TVSeriesPage({ params }: TVSeriesPageProps) {
+    const { id } = params;
     const { data: session, status } = useSession();
-    const [movie, setMovie] = useState<Movie | null>(null);
+    const [tvSeries, setTVSeries] = useState<TVSeries | null>(null);
     const [commentContent, setCommentContent] = useState("");
     const [replyContent, setReplyContent] = useState("");
     const [replyingTo, setReplyingTo] = useState<number | null>(null);
 
     useEffect(() => {
-        const fetchMovie = async () => {
+        const fetchTVSeries = async () => {
             const response = await axios.get(
-                `https://api.themoviedb.org/3/movie/${id}`,
+                `https://api.themoviedb.org/3/tv/${id}`,
                 {
                     params: {
                         api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
@@ -101,29 +104,23 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                     },
                 }
             );
-            setMovie(response.data);
+            setTVSeries(response.data);
         };
-        fetchMovie();
+        fetchTVSeries();
     }, [id]);
 
-    const { data: favorites, refetch: refetchFavorites } =
-        api.movies.getFavorites.useQuery(undefined, {
-            enabled: !!session,
-        });
-
-
     const { data: comments, refetch: refetchComments } =
-        api.comments.getCommentsByMovie.useQuery(
-            { movieId: parseInt(id) },
-            { enabled: !!movie }
+        api.comments.getCommentsByTVSeries.useQuery(
+            { tvSeriesId: parseInt(id) },
+            { enabled: !!tvSeries }
         );
 
-    const { data: relatedMovies } = api.movies.getRelatedMovies.useQuery(
-        { movieId: parseInt(id) },
-        { enabled: !!movie }
+    const { data: relatedTVSeries } = api.tv.getRelatedTVSeries.useQuery(
+        { tvSeriesId: parseInt(id) },
+        { enabled: !!tvSeries }
     );
 
-    const addComment = api.comments.addComment.useMutation({
+    const addComment = api.comments.addCommentToTVSeries.useMutation({
         onSuccess: () => {
             setCommentContent("");
             refetchComments();
@@ -150,26 +147,21 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
         },
     });
 
-    const isFavorite = favorites?.some((fav) => fav.movieId === parseInt(id));
+    if (!tvSeries) {
+        return <div>Đang tải...</div>;
+    }
 
-    const addFavorite = api.movies.addFavorite.useMutation({
-        onSuccess: () => {
-            refetchFavorites();
-        },
-    });
-
-    const removeFavorite = api.movies.removeFavorite.useMutation({
-        onSuccess: () => {
-            refetchFavorites();
-            alert("Đã xóa khỏi yêu thích!");
-        },
-    });
+    const creator = tvSeries.credits.crew.find((member) => member.job === "Creator");
+    const topCast = tvSeries.credits.cast.slice(0, 5);
+    const trailer = tvSeries.videos.results.find(
+        (video) => video.type === "Trailer" && video.site === "YouTube"
+    );
 
     const handleAddComment = (e: React.FormEvent) => {
         e.preventDefault();
         if (!commentContent.trim()) return;
         addComment.mutate({
-            movieId: parseInt(id),
+            tvSeriesId: parseInt(id),
             content: commentContent,
         });
     };
@@ -183,109 +175,60 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
         });
     };
 
-    if (!movie) {
-        return <div>Đang tải...</div>;
-    }
-
-    const director = movie.credits.crew.find((member) => member.job === "Director");
-    const topCast = movie.credits.cast.slice(0, 5);
-    const trailer = movie.videos.results.find(
-        (video) => video.type === "Trailer" && video.site === "YouTube"
-    );
-
     return (
-        <div className="bg-gray-900 text-white flex flex-col min-h-screen">
-            {/* Thêm pt-16 (padding-top) để bù đắp chiều cao của navbar */}
+        <div className="bg-gray-900 min-h-screen text-white pt-16">
             <div
                 className="bg-cover bg-center h-[440px] max-md:h-fit"
                 style={{
-                    backgroundImage: movie.backdrop_path
-                        ? `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
+                    backgroundImage: tvSeries.backdrop_path
+                        ? `url(https://image.tmdb.org/t/p/original${tvSeries.backdrop_path})`
                         : "none",
-                    backgroundColor: movie.backdrop_path ? "transparent" : "gray",
+                    backgroundColor: tvSeries.backdrop_path ? "transparent" : "gray",
                 }}
             >
-                <div className="bg-gray-900/50 flex items-center h-full max-md:py-6">
+                <div className="bg-gray-900/60 flex items-center h-full max-md:py-6">
                     <div className="container mx-auto px-4 flex flex-col md:flex-row gap-6">
                         <img
-                            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                            alt={movie.title}
+                            src={
+                                tvSeries.poster_path
+                                    ? `https://image.tmdb.org/t/p/w500${tvSeries.poster_path}`
+                                    : "/images/placeholder.png"
+                            }
+                            alt={tvSeries.name}
                             className="w-48 md:w-64 rounded-lg shadow-lg"
                         />
                         <div className="flex-1">
-                            <h1 className="text-4xl font-bold">{movie.title}</h1>
+                            <h1 className="text-4xl font-bold">{tvSeries.name}</h1>
                             <p className="text-gray-400 mt-2">
-                                {movie.release_date} • {movie.runtime} phút •{" "}
-                                {movie.genres.map((genre, index) => (
+                                {tvSeries.first_air_date} • {tvSeries.number_of_seasons} mùa •{" "}
+                                {tvSeries.number_of_episodes} tập •{" "}
+                                {tvSeries.genres.map((genre, index) => (
                                     <span key={genre.id}>
                                         <Link href={`/genres/${genre.id}`} className="hover:text-blue-500">
                                             {genre.name}
                                         </Link>
-                                        {index < movie.genres.length - 1 && ", "}
+                                        {index < tvSeries.genres.length - 1 && ", "}
                                     </span>
                                 ))}
                             </p>
                             <p className="text-yellow-400 mt-2">
-                                ⭐ {movie.vote_average.toFixed(1)}/10 <span className="text-gray-400">{`(${movie.vote_count})`}</span>
+                                ⭐ {tvSeries.vote_average.toFixed(1)}/10
                             </p>
-                            <p className="mt-4">{movie.overview}</p>
-                            {session && (
-                                <div className="mt-4">
-                                    {isFavorite ? (
-                                        <button
-                                            onClick={() => {
-                                                const favorite = favorites?.find(
-                                                    (fav) => fav.movieId === parseInt(id)
-                                                );
-                                                if (favorite) {
-                                                    removeFavorite.mutate({ id: favorite.id });
-                                                }
-                                            }}
-                                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-                                        >
-                                            Xóa khỏi yêu thích
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() =>
-                                                addFavorite.mutate({
-                                                    movieId: movie.id,
-                                                    title: movie.title,
-                                                    posterPath: movie.poster_path,
-                                                })
-                                            }
-                                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded cursor-pointer"
-                                        >
-                                            Thêm vào yêu thích
-                                        </button>
-                                    )}
-                                </div>
-                            )}
+                            <p className="mt-4">{tvSeries.overview}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div className="container mx-auto px-4 py-8">
-                <div className="md:grid max-md:flex max-md:flex-col md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="md:col-span-1">
-                        {director && (
+                        {creator && (
                             <div className="mb-6">
-                                <h2 className="text-2xl font-semibold mb-4">Đạo diễn</h2>
-                                <Link href={`/director/${director.id}`} className="flex items-center gap-4 hover:bg-gray-800 p-2 rounded">
-                                    {director.profile_path ? (
-                                        <img
-                                            src={`https://image.tmdb.org/t/p/w200${director.profile_path}`}
-                                            alt={director.name}
-                                            className="w-12 h-12 rounded-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center">
-                                            <span className="text-gray-400 select-none">N/A</span>
-                                        </div>
-                                    )}
-                                    <p className="text-gray-300 mt-2">
-                                        {director.name}
+                                <h2 className="text-2xl font-semibold">Người tạo</h2>
+                                <Link href={`/creators/${creator.id}`}>
+                                    <p className="text-gray-300 mt-2 hover:text-blue-500">
+                                        {creator.name}
                                     </p>
                                 </Link>
                             </div>
@@ -312,7 +255,7 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                             <h2 className="text-2xl font-semibold">Diễn viên</h2>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
                                 {topCast.map((actor) => (
-                                    <Link href={`/actor/${actor.id}`} key={actor.id}>
+                                    <Link href={`/actors/${actor.id}`} key={actor.id}>
                                         <div className="flex items-center gap-3 hover:bg-gray-800 p-2 rounded">
                                             {actor.profile_path ? (
                                                 <img
@@ -322,7 +265,11 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                                                 />
                                             ) : (
                                                 <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center">
-                                                    <span className="text-gray-400 select-none">N/A</span>
+                                                    <img
+                                                        src="/images/placeholder.png"
+                                                        alt="Placeholder"
+                                                        className="w-12 h-12 rounded-full object-cover"
+                                                    />
                                                 </div>
                                             )}
                                             <div>
@@ -335,8 +282,9 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                             </div>
                         </div>
 
+
                         {/* Phần bình luận */}
-                        <div className="mt-8 ">
+                        <div className="mt-8">
                             <h2 className="text-2xl font-semibold mb-4">Bình luận</h2>
                             {/* Form thêm bình luận */}
                             {session ? (
@@ -397,7 +345,7 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                                                         {session && (
                                                             <button
                                                                 onClick={() => setReplyingTo(comment.id)}
-                                                                className="text-blue-500 hover:text-blue-600 text-sm cursor-pointer"
+                                                                className="text-blue-500 hover:text-blue-600 text-sm"
                                                             >
                                                                 Trả lời
                                                             </button>
@@ -407,7 +355,7 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                                                                 session.user.roleId === 1) && (
                                                                 <button
                                                                     onClick={() => deleteComment.mutate({ commentId: comment.id })}
-                                                                    className="text-red-500 hover:text-red-600 text-sm cursor-pointer"
+                                                                    className="text-red-500 hover:text-red-600 text-sm"
                                                                 >
                                                                     Xóa
                                                                 </button>
@@ -459,7 +407,7 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                                                                             />
                                                                         ) : (
                                                                             <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden">
-                                                                                <span className="text-gray-400 select-none">N/A</span>
+                                                                                <span className="text-gray-400">N/A</span>
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -500,17 +448,19 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                                 <p className="text-gray-400">Chưa có bình luận nào.</p>
                             )}
                         </div>
-                        {/* Phim liên quan */}
+                        {/* TV Series liên quan */}
                         <div className="mt-8">
-                            <h2 className="text-2xl font-semibold mb-4">Phim liên quan</h2>
-                            {relatedMovies?.length ? (
+                            <h2 className="text-2xl font-semibold mb-4">TV Series liên quan</h2>
+                            {relatedTVSeries?.length ? (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {relatedMovies.slice(0, 5).map((relatedMovie: RelatedMovie) => (
-                                        <MovieCard movie={relatedMovie} />
+                                    {relatedTVSeries.slice(0, 5).map((relatedSeries: RelatedTVSeries) => (
+                                        <Link key={relatedSeries.id} href={`/tv/${relatedSeries.id}`}>
+                                            <TVSeriesCard tvSeries={relatedSeries} />
+                                        </Link>
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-gray-400">Không có phim liên quan.</p>
+                                <p className="text-gray-400">Không có TV Series liên quan.</p>
                             )}
                         </div>
                     </div>

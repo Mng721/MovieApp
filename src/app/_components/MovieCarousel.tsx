@@ -8,6 +8,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import MovieCard from "./movieCard";
+import TVSeriesCard from "./tvSeriesCard";
 
 interface Movie {
     id: number;
@@ -15,14 +16,18 @@ interface Movie {
     poster_path: string;
     release_date: string;
     vote_average?: number;
+    name?: string;
+    first_air_date?: string
+
 }
 
 interface MovieCarouselProps {
     url: string;
     title: string;
+    isMovie?: boolean;
 }
 
-export default function MovieCarousel({ url, title }: MovieCarouselProps) {
+export default function MovieCarousel({ url, title, isMovie = true }: MovieCarouselProps) {
     const [movies, setMovies] = useState<Movie[]>([]);
 
     useEffect(() => {
@@ -65,13 +70,24 @@ export default function MovieCarousel({ url, title }: MovieCarouselProps) {
             >
                 {movies.map((movie) => (
                     <SwiperSlide key={movie.id}>
-                        <MovieCard movie={{
-                            id: movie.id,
-                            title: movie.title,
-                            poster_path: movie.poster_path || "",
-                            vote_average: movie.vote_average,
-                            release_date: movie.release_date, // Có thể thêm trường release_date vào favoriteMovies nếu cần
-                        }}></MovieCard>
+                        {isMovie ?
+                            <MovieCard movie={{
+                                id: movie.id,
+                                title: movie.title,
+                                poster_path: movie.poster_path || "",
+                                vote_average: movie.vote_average,
+                                release_date: movie.release_date, // Có thể thêm trường release_date vào favoriteMovies nếu cần
+                            }}></MovieCard> :
+                            <TVSeriesCard tvSeries={
+                                {
+                                    id: movie.id,
+                                    name: movie.name,
+                                    poster_path: movie.poster_path,
+                                    first_air_date: movie.first_air_date,
+                                    vote_average: movie.vote_average
+                                }
+                            }
+                            ></TVSeriesCard>}
                     </SwiperSlide>
                 ))}
             </Swiper>

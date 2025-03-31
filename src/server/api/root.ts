@@ -4,6 +4,7 @@ import { authRouter } from "./routers/auth";
 import { moviesRouter } from "./routers/movie";
 import { usersRouter } from "./routers/user";
 import { commentsRouter } from "./routers/comments";
+import { tvRouter } from "./routers/tv";
 
 /**
  * This is the primary router for your server.
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
   post: postRouter,
   auth: authRouter,
   movies: moviesRouter,
+  tv: tvRouter,
   user: usersRouter,
   comments: commentsRouter,
 });

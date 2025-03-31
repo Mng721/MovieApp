@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { db } from "../../db";
 import { comments, commentReplies, users } from "../../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
 export const commentsRouter = createTRPCRouter({
@@ -25,11 +25,9 @@ export const commentsRouter = createTRPCRouter({
         .leftJoin(users, eq(comments.userId, users.id))
         .where(eq(comments.movieId, input.movieId))
         .orderBy(comments.createdAt);
-
       // Lấy danh sách trả lời cho từng bình luận
       const commentIds = movieComments.map((comment) => comment.id);
-      const replies = commentIds.length
-        ? await db
+      const replies = await db
             .select({
               id: commentReplies.id,
               content: commentReplies.content,
@@ -42,9 +40,8 @@ export const commentsRouter = createTRPCRouter({
             })
             .from(commentReplies)
             .leftJoin(users, eq(commentReplies.userId, users.id))
-            .where(sql`${commentReplies.commentId} IN (${commentIds})`)
+            .where(inArray(commentReplies.commentId, commentIds))
             .orderBy(commentReplies.createdAt)
-        : [];
 
       // Gộp trả lời vào bình luận
       const commentsWithReplies = movieComments.map((comment) => ({
@@ -53,6 +50,48 @@ export const commentsRouter = createTRPCRouter({
       }));
 
       return commentsWithReplies;
+    }),
+
+  // Lấy danh sách bình luận của một TV Series
+  getCommentsByTVSeries: publicProcedure
+    .input(z.object({ tvSeriesId: z.number() }))
+    .query(async ({ input }) => {
+      const tvComments = await db
+        .select({
+          id: comments.id,
+          content: comments.content,
+          createdAt: comments.createdAt,
+          userId: comments.userId,
+          userName: users.name,
+          userEmail: users.email,
+          userAvatar: users.image,
+        })
+        .from(comments)
+        .leftJoin(users, eq(comments.userId, users.id))
+        .where(eq(comments.tvSeriesId, input.tvSeriesId))
+        .orderBy(comments.createdAt);
+
+      const commentIds = tvComments.map((comment) => comment.id);
+      const replies = await db
+            .select({
+              id: commentReplies.id,
+              content: commentReplies.content,
+              createdAt: commentReplies.createdAt,
+              userId: commentReplies.userId,
+              userName: users.name,
+              userEmail: users.email,
+              userAvatar: users.image,
+              commentId: commentReplies.commentId,
+            })
+            .from(commentReplies)
+            .leftJoin(users, eq(commentReplies.userId, users.id))
+            .where(inArray(commentReplies.commentId, commentIds))
+            .orderBy(commentReplies.createdAt);
+
+      return tvComments.map((comment) => ({
+        ...comment,
+        replies: replies.filter((reply) => reply.commentId === comment.id),
+      }));
     }),
 
   // Thêm bình luận
@@ -75,6 +114,27 @@ export const commentsRouter = createTRPCRouter({
         .returning();
       return newComment;
     }),
+
+  // Thêm bình luận cho TV Series
+  addCommentToTVSeries: protectedProcedure
+  .input(
+    z.object({
+      tvSeriesId: z.number(),
+      content: z.string().min(1, "Nội dung bình luận không được để trống"),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    const userId = ctx.session.user.id;
+    const [newComment] = await db
+      .insert(comments)
+      .values({
+        userId,
+        tvSeriesId: input.tvSeriesId,
+        content: input.content,
+      })
+      .returning();
+    return newComment;
+  }),
 
   // Thêm trả lời cho bình luận
   addReply: protectedProcedure

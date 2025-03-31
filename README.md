@@ -1,29 +1,90 @@
-# Create T3 App
+# MovieApp - Ứng dụng Xem Phim và TV Series
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+![MovieApp Banner](https://via.placeholder.com/1200x400.png?text=MovieApp+Banner)  
+_(Bạn có thể thay thế link ảnh banner bằng ảnh thực tế của dự án)_
 
-## What's next? How do I make an app with this?
+## Giới thiệu
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+**MovieApp** là một ứng dụng web cho phép người dùng khám phá, xem thông tin chi tiết, và tương tác với các bộ phim và TV series. Dự án được xây dựng với mục tiêu cung cấp trải nghiệm người dùng mượt mà, bao gồm các tính năng như tìm kiếm phim, xem chi tiết phim/TV series, bình luận, trả lời bình luận, và gợi ý nội dung liên quan. Ứng dụng sử dụng **TMDB API** để lấy dữ liệu phim và TV series, và tích hợp các công nghệ hiện đại như Next.js, tRPC, và Drizzle ORM để đảm bảo hiệu suất và khả năng mở rộng.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+### Các tính năng chính
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- **Khám phá phim và TV series**: Xem danh sách phim/TV series theo thể loại, tìm kiếm phim theo từ khóa.
+- **Chi tiết phim/TV series**: Hiển thị thông tin chi tiết bao gồm poster, tổng quan, thể loại, diễn viên, trailer, số mùa/tập (đối với TV series).
+- **Bình luận và trả lời**: Người dùng có thể bình luận, trả lời bình luận, và xóa bình luận của mình (hoặc admin có thể xóa).
+- **Gợi ý nội dung liên quan**: Gợi ý các phim hoặc TV series liên quan dựa trên nội dung đang xem.
+- **Quản lý tài khoản**: Đăng nhập, đăng ký, quản lý thông tin cá nhân, và thêm phim/TV series vào danh sách yêu thích.
+- **Quản trị viên**: Admin có thể quản lý người dùng và nội dung bình luận.
+- **Responsive Design**: Giao diện thân thiện, hỗ trợ cả desktop và mobile.
 
-## Learn More
+## Công nghệ sử dụng
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+- **Frontend**: Next.js (React Framework), Tailwind CSS
+- **Backend**: tRPC (Type-safe API), Next.js API Routes
+- **Cơ sở dữ liệu**: PostgreSQL, Drizzle ORM
+- **API**: TMDB API (The Movie Database)
+- **Xác thực**: NextAuth.js
+- **Khác**: TypeScript, Axios, Date-fns
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## Cài đặt và chạy dự án
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### Yêu cầu
 
-## How do I deploy this?
+- Node.js (phiên bản 18.x trở lên)
+- PostgreSQL (phiên bản 13.x trở lên)
+- Tài khoản TMDB để lấy API Key (https://www.themoviedb.org/documentation/api)
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+### Hướng dẫn cài đặt
+
+1. **Clone repository**:
+   ```bash
+   git clone https://github.com/your-username/movieapp.git
+   cd movieapp
+   ```
+2. **Cài đặt dependencies**:
+
+   ```bash
+   npm install
+   ```
+
+3. **Tạo file môi trường**:
+
+   ```env
+   DATABASE_URL="postgresql://username:password@localhost:5432/movieapp"
+   TMDB_API_KEY="your-tmdb-api-key"
+   NEXTAUTH_URL="http://localhost:3000"
+   NEXTAUTH_SECRET="your-nextauth-secret"
+   NEXT_PUBLIC_TMDB_API_KEY="your-tmdb-api-key"
+   ```
+
+4. **Khởi tạo cơ sở dữ liệu**:
+
+   ```bash
+   npx drizzle-kit generate:pg
+   npx drizzle-kit push:pg
+   ```
+
+5. **Chạy ứng dụng**:
+   ```bash
+   npm run dev
+   ```
+
+Mở trình duyệt và truy cập: http://localhost:3000.
+
+## Cách sử dụng
+
+1. **Trang chủ**:
+   -Truy cập http://localhost:3000 để xem danh sách phim nổi bật.
+   -Sử dụng thanh tìm kiếm để tìm phim theo từ khóa.
+
+2. **Chi tiết phim/TV series**:
+   -Truy cập /movies/[id] hoặc /tv/[id] để xem thông tin chi tiết.
+   -Bình luận, trả lời bình luận, và xem nội dung liên quan.
+
+3. **Đăng nhập/Đăng ký**:
+   Truy cập /login để đăng nhập hoặc đăng ký tài khoản.
+
+Sau khi đăng nhập, bạn có thể thêm phim/TV series vào danh sách yêu thích.
+
+4. **Quản trị viên**:
+   Admin (roleId = 1) có thể truy cập /admin để quản lý người dùng và bình luận.

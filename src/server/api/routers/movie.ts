@@ -67,6 +67,7 @@ export const moviesRouter = createTRPCRouter({
         totalPages: response.data.total_pages,
       };
     }),
+
   // Lấy danh sách phim yêu thích của user
   getFavorites: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
@@ -97,7 +98,7 @@ export const moviesRouter = createTRPCRouter({
     return response.data.results;
   }),
     
-  // Trong moviesRouter
+  // Lấy thể loại
   getGenres: publicProcedure.query(async () => {
     const response = await axios.get(`${TMDB_BASE_URL}/genre/movie/list`, {
       params: {
@@ -106,4 +107,16 @@ export const moviesRouter = createTRPCRouter({
     });
     return response.data.genres;
   }),
+  
+  // Lấy phim liên quan
+  getRelatedMovies: publicProcedure
+    .input(z.object({ movieId: z.number() }))
+    .query(async ({ input }) => {
+      const response = await axios.get(`${TMDB_BASE_URL}/movie/${input.movieId}/recommendations`, {
+        params: {
+          api_key: TMDB_API_KEY,
+        },
+      });
+      return response.data.results;
+    }),
 });
