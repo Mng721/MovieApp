@@ -35,7 +35,7 @@ Dưới đây là một số ảnh chụp màn hình của **MovieApp**:
 
 ### Chi tiết phim
 
-![Chi tiết phim](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/movie-detail-page.pngpng)
+![Chi tiết phim](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/movie-detail-page.png)
 
 ### Chi tiết diễn viên
 
