@@ -28,12 +28,15 @@ export default function Navbar() {
 
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const isAdmin = session?.user?.roleId === 2;
+    const isAdmin = session?.user?.roleId === 1;
 
     const { data: searchResults = [], refetch } = api.movies.searchMovies.useQuery(
         { query: searchQuery },
         { enabled: false }
     );
+
+    // Lấy thông tin người dùng
+    const { data: userData } = api.user.getUser.useQuery()
 
     // Lấy danh sách genres từ tRPC
     const { data: genres } = api.movies.getGenres.useQuery();
@@ -166,7 +169,7 @@ export default function Navbar() {
                         Movies
                     </Link>
                     {/* Dropdown thể loại */}
-                    <div className="relative">
+                    <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             className="hover:text-gray-300 flex items-center gap-1 cursor-pointer"
@@ -214,9 +217,9 @@ export default function Navbar() {
                                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                                 className="flex items-center gap-2 cursor-pointer"
                             >
-                                {session.user.image ? (
+                                {userData?.image ? (
                                     <img
-                                        src={session.user.image}
+                                        src={userData?.image}
                                         alt="Avatar"
                                         className="w-8 h-8 rounded-full object-cover"
                                     />
@@ -229,7 +232,7 @@ export default function Navbar() {
                             {isUserDropdownOpen && (
                                 <div className="absolute top-full right-0 bg-gray-700 rounded shadow-lg mt-2 z-50 w-48">
                                     <div className="truncate p-2">
-                                        Xin chào <span className="italic"> {" "}{session.user.name ?? session.user.email}</span>
+                                        Xin chào <span className="italic"> {" "}{userData?.name ?? userData?.email}</span>
                                     </div>
                                     <hr className="opacity-30"></hr>
                                     <Link
@@ -287,7 +290,7 @@ export default function Navbar() {
                     <Link href="/movies" className="block hover:text-gray-300">
                         Movies
                     </Link>
-                    <div>
+                    <div ref={dropdownRef}>
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             className="block hover:text-gray-300 w-full text-left"

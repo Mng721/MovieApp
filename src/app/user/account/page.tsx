@@ -92,7 +92,6 @@ export default function AccountPage() {
                 `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
                 formData).then(
                     (res) => {
-                        // Giả lập upload: Trong thực tế, bạn sẽ gửi file lên server hoặc dịch vụ lưu trữ
                         avatarUrl = res.data.secure_url; // Thay bằng URL thực tế sau khi upload
                     }
                 ).catch((e) => {

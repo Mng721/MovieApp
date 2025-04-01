@@ -162,7 +162,7 @@ export const commentsRouter = createTRPCRouter({
     .input(z.object({ commentId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const isAdmin = ctx.session.user.roleId === 2;
+      const isAdmin = ctx.session.user.roleId === 1;
 
       const comment = await db
         .select()
@@ -187,7 +187,7 @@ export const commentsRouter = createTRPCRouter({
     .input(z.object({ replyId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const isAdmin = ctx.session.user.roleId === 2;
+      const isAdmin = ctx.session.user.roleId === 1;
 
       const reply = await db
         .select()
