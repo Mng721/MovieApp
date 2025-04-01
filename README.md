@@ -1,7 +1,5 @@
 # MovieApp - Ứng dụng Xem Phim và TV Series
 
-![MovieApp Banner](https://via.placeholder.com/1200x400.png?text=MovieApp+Banner)
-
 ## Giới thiệu
 
 **MovieApp** là một ứng dụng web cho phép người dùng khám phá, xem thông tin chi tiết, và tương tác với các bộ phim và TV series. Dự án được xây dựng với mục tiêu cung cấp trải nghiệm người dùng mượt mà, bao gồm các tính năng như tìm kiếm phim, xem chi tiết phim/TV series, bình luận, trả lời bình luận, và gợi ý nội dung liên quan. Ứng dụng sử dụng **TMDB API** để lấy dữ liệu phim và TV series, và tích hợp các công nghệ hiện đại như Next.js, tRPC, và Drizzle ORM để đảm bảo hiệu suất và khả năng mở rộng.
@@ -41,9 +39,17 @@ Dưới đây là một số ảnh chụp màn hình của **MovieApp**:
 
 ![Chi tiết diễn viên](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/actor-page.png)
 
+### Chi tiết đạo diễn
+
+![Chi tiết đạo diễn](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/director-page.png)
+
 ### Lọc phim theo thể loại
 
 ![Lọc phim theo thể loại](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/.png)
+
+### Quản lý tài khoản
+
+![Lọc phim theo thể loại](https://github.com/Mng721/MovieApp/blob/main/public/assets/screenshots/account-page.png)
 
 ## Cài đặt và chạy dự án
 
@@ -74,6 +80,11 @@ Dưới đây là một số ảnh chụp màn hình của **MovieApp**:
    NEXTAUTH_URL="http://localhost:3000"
    NEXTAUTH_SECRET="your-nextauth-secret"
    NEXT_PUBLIC_TMDB_API_KEY="your-tmdb-api-key"
+   CLOUDINARY_CLOUD_NAME="your-cloud-name"
+   CLOUDINARY_API_KEY="your-api-key"
+   CLOUDINARY_API_SECRET="your-api-secret"
+   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your-cloud-name"
+   NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET="your-upload-preset"
    ```
 
 4. **Khởi tạo cơ sở dữ liệu**:

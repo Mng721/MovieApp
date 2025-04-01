@@ -27,19 +27,20 @@ export default function Register() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center">
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex min-h-screen items-center justify-center bg-gray-900">
+            <form onSubmit={handleSubmit} className="space-y-4 flex flex-col items-center shadow p-10 bg-gray-800 rounded-2xl">
+                <div className="text-2xl text-white">Đăng ký</div>
                 <input
                     name="email"
                     type="email"
                     placeholder="Email"
-                    className="block w-64 p-2 border"
+                    className="block w-64 p-2 border placeholder-amber-50"
                 />
                 <input
                     name="password"
                     type="password"
                     placeholder="Password"
-                    className="block w-64 p-2 border"
+                    className="block w-64 p-2 border placeholder-amber-50"
                 />
                 {error && <p className="text-red-500">{error}</p>} {/* Hiển thị lỗi */}
                 <button
