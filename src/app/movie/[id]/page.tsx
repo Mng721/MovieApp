@@ -505,8 +505,8 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                             <h2 className="text-2xl font-semibold mb-4">Phim liên quan</h2>
                             {relatedMovies?.length ? (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {relatedMovies.slice(0, 5).map((relatedMovie: RelatedMovie) => (
-                                        <MovieCard movie={relatedMovie} />
+                                    {relatedMovies.slice(0, 5).map((relatedMovie: RelatedMovie, index: number) => (
+                                        <MovieCard movie={relatedMovie} key={`rel-${index}`} />
                                     ))}
                                 </div>
                             ) : (

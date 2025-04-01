@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import axios from "axios";
 import Link from "next/link";
 import MovieCard from "~/app/_components/movieCard";
@@ -26,8 +26,8 @@ interface ActorPageProps {
     params: { id: string };
 }
 
-export default function ActorPage({ params }: ActorPageProps) {
-    const { id } = params;
+export default function ActorPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const [actor, setActor] = useState<Actor | null>(null);
     const [credits, setCredits] = useState<MovieCredit[]>([]);
 

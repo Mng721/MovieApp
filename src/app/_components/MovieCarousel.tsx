@@ -69,7 +69,7 @@ export default function MovieCarousel({ url, title, isMovie = true }: MovieCarou
                 }}
             >
                 {movies.map((movie) => (
-                    <SwiperSlide key={movie.id}>
+                    <SwiperSlide key={isMovie ? `movie-${movie.id}` : `tv-${movie.id}`}>
                         {isMovie ?
                             <MovieCard movie={{
                                 id: movie.id,
@@ -87,6 +87,7 @@ export default function MovieCarousel({ url, title, isMovie = true }: MovieCarou
                                     vote_average: movie.vote_average
                                 }
                             }
+
                             ></TVSeriesCard>}
                     </SwiperSlide>
                 ))}
