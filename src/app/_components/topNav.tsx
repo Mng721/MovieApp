@@ -4,6 +4,8 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+import { FaHeart, FaSignOutAlt, FaUser } from "react-icons/fa";
+
 interface Movie {
     id: number;
     title: string;
@@ -235,17 +237,29 @@ export default function Navbar() {
                                         Xin chào <span className="italic"> {" "}{userData?.name ?? userData?.email}</span>
                                     </div>
                                     <hr className="opacity-30"></hr>
+
+                                    <Link
+                                        href="/movie/favourite"
+                                        onClick={() => setIsUserDropdownOpen(false)}
+                                        className="flex hover:bg-gray-600 p-2 text-center items-center gap-3"
+                                    >
+                                        <FaHeart />
+                                        Yêu thích
+                                    </Link>
                                     <Link
                                         href="/user/account"
                                         onClick={() => setIsUserDropdownOpen(false)}
-                                        className="block hover:bg-gray-600 p-2 text-center"
+                                        className="flex hover:bg-gray-600 p-2 text-center items-center gap-3"
+
                                     >
+                                        <FaUser />
                                         Quản lý tài khoản
                                     </Link>
                                     <button
                                         onClick={handleSignOut}
-                                        className="block w-full text-center hover:bg-gray-600 p-2 cursor-pointer"
+                                        className="flex hover:bg-gray-600 p-2 text-center items-center gap-3"
                                     >
+                                        <FaSignOutAlt />
                                         Đăng xuất
                                     </button>
                                 </div>
@@ -322,17 +336,28 @@ export default function Navbar() {
                     )}
                     {status === "authenticated" ? (
                         <>
+
+                            <Link
+                                href="/movie/favourite"
+                                onClick={() => setIsOpen(false)}
+                                className="hover:text-gray-300 flex items-center gap-3"
+                            >
+                                <FaHeart />
+                                Yêu thích
+                            </Link>
                             <Link
                                 href="/user/account"
                                 onClick={() => setIsOpen(false)}
-                                className="block hover:text-gray-300"
+                                className="hover:text-gray-300 flex items-center gap-3"
                             >
+                                <FaUser />
                                 Quản lý tài khoản
                             </Link>
                             <button
                                 onClick={handleSignOut}
-                                className="block w-full text-left bg-red-500 hover:bg-red-600 px-4 py-2 rounded"
+                                className="hover:text-gray-300 flex items-center gap-3 cursor-pointer"
                             >
+                                <FaSignOutAlt />
                                 Đăng xuất
                             </button>
                         </>

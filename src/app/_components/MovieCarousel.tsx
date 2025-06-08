@@ -22,7 +22,7 @@ interface Movie {
 }
 
 interface MovieCarouselProps {
-    url: string;
+    url?: string;
     title: string;
     isMovie?: boolean;
 }
@@ -31,6 +31,7 @@ export default function MovieCarousel({ url, title, isMovie = true }: MovieCarou
     const [movies, setMovies] = useState<Movie[]>([]);
 
     useEffect(() => {
+        if (!url) return
         const fetchMovies = async () => {
             try {
                 const response = await axios.get(
@@ -61,12 +62,16 @@ export default function MovieCarousel({ url, title, isMovie = true }: MovieCarou
                 spaceBetween={16}
                 slidesPerView={5}
                 navigation
-                autoplay={{ delay: 10000 }}
+                autoplay={{
+                    delay: 3000,
+                    pauseOnMouseEnter: true,
+                }}
                 breakpoints={{
                     320: { slidesPerView: 2 },
                     640: { slidesPerView: 3 },
                     1024: { slidesPerView: 5 },
                 }}
+                loop={true}
             >
                 {movies.map((movie) => (
                     <SwiperSlide key={isMovie ? `movie-${movie.id}` : `tv-${movie.id}`}>

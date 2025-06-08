@@ -8,7 +8,11 @@ import { eq } from "drizzle-orm";
 
 export const authRouter = createTRPCRouter({
   register: publicProcedure
-    .input(z.object({ email: z.string().email(), password: z.string().min(6) }))
+    .input(z.object({ 
+      email: z.string().email(), 
+      password: z.string().min(6),
+      name: z.string().optional() 
+    }))
     .mutation(async ({ input }) => {
       // Kiểm tra xem email đã tồn tại chưa
       const existingUser = await db.query.users.findFirst({
@@ -26,9 +30,9 @@ export const authRouter = createTRPCRouter({
       const hashedPassword = await bcrypt.hash(input.password, 10);
       const [user] = await db
         .insert(users)
-        .values({ email: input.email, password: hashedPassword, roleId: 3 }) // Default roleId = 1 (user)
+        .values({ email: input.email, password: hashedPassword, roleId: 3, name:input.name }) // Default roleId = 3 (user)
         .returning();
 
-      return { id: user.id, email: user.email };
+      return { id: user.id, email: user.email, name: user.name};
     }),
 });

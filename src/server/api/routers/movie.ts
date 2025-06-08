@@ -8,6 +8,9 @@ import axios from "axios";
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+// Schema cho genres
+const genreSchema = z.array(z.object({ id: z.number(), name: z.string() }));
+
 export const moviesRouter = createTRPCRouter({
   // Lấy danh sách phim từ TMDB
   searchMovies: publicProcedure
@@ -29,6 +32,10 @@ export const moviesRouter = createTRPCRouter({
         movieId: z.number(),
         title: z.string(),
         posterPath: z.string().nullable(),
+        genres: z.array(z.object({
+            id: z.number(),
+            name: z.string(),
+        })).optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -36,10 +43,11 @@ export const moviesRouter = createTRPCRouter({
       const [favorite] = await db
         .insert(favoriteMovies)
         .values({
-            userId,
+          userId,
           movieId: input.movieId,
           title: input.title,
           posterPath: input.posterPath,
+          genre: input.genres
         })
         .returning();
       return favorite;
@@ -119,4 +127,5 @@ export const moviesRouter = createTRPCRouter({
       });
       return response.data.results;
     }),
+    
 });

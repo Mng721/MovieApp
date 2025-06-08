@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { index, integer, pgTableCreator, primaryKey, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, pgTableCreator, primaryKey, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
 /**
@@ -9,28 +9,6 @@ import { type AdapterAccount } from "next-auth/adapters";
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
 export const createTable = pgTableCreator((name) => `movie-app_${name}`);
-
-export const posts = createTable(
-  "post",
-  (d) => ({
-    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 256 }),
-    createdById: d
-      .varchar({ length: 255 })
-      .notNull()
-      .references(() => users.id),
-    createdAt: d
-      .timestamp({ withTimezone: true })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
-  }),
-  (t) => [
-    index("created_by_idx").on(t.createdById),
-    index("name_idx").on(t.name),
-  ]
-);
-
 export const users = createTable("user", (d) => ({
   id: d
     .varchar({ length: 255 })
@@ -61,6 +39,14 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   commentReplies: many(commentReplies),
 }));
 
+
+export const watchHistory = createTable("watch_history", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  movieId: integer("movie_id").notNull(),
+  watchedAt: timestamp("watched_at").defaultNow(),
+  metadata: jsonb("metadata"), // Lưu thêm thông tin như thời gian xem, trạng thái
+});
 
 // Bảng roles
 export const roles = createTable("roles", {
@@ -143,6 +129,7 @@ export const favoriteMovies = createTable("favorite_movies", {
   title: varchar("title",{length: 255}).notNull(), // Tiêu đề phim
   posterPath: varchar("poster_path"), // Đường dẫn ảnh poster từ TMDB
   addedAt: timestamp("added_at").defaultNow(),
+  genre: jsonb('genres').notNull().$type<{ id: number; name: string }[]>(), 
 });
 
 // Thêm bảng comment

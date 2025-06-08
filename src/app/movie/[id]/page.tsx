@@ -7,6 +7,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import MovieCard from "~/app/_components/movieCard";
+import { Bounce, toast, ToastContainer } from "react-toastify";
 interface Genre {
     id: number;
     name: string;
@@ -154,14 +155,51 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
 
     const addFavorite = api.movies.addFavorite.useMutation({
         onSuccess: () => {
+            toast("Đã thêm vào yêu thích!", {
+                position: "bottom-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+            })
             refetchFavorites();
         },
+        onMutate: () => {
+
+        },
+        onError: (e) => {
+            toast(`Xảy ra lỗi: ${e}`, {
+                position: "bottom-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+            })
+        }
     });
 
     const removeFavorite = api.movies.removeFavorite.useMutation({
         onSuccess: () => {
             refetchFavorites();
-            alert("Đã xóa khỏi yêu thích!");
+            toast("Đã xóa khỏi yêu thích!", {
+                position: "bottom-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+            })
         },
     });
 
@@ -195,6 +233,7 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
 
     return (
         <div className="bg-gray-900 text-white flex flex-col min-h-screen">
+            <ToastContainer />
             {/* Thêm pt-16 (padding-top) để bù đắp chiều cao của navbar */}
             <div
                 className="bg-cover bg-center h-[440px] max-md:h-fit"
@@ -252,6 +291,7 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                                                     movieId: movie.id,
                                                     title: movie.title,
                                                     posterPath: movie.poster_path,
+                                                    genres: movie.genres
                                                 })
                                             }
                                             className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded cursor-pointer"

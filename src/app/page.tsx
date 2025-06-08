@@ -1,9 +1,6 @@
-import { auth } from "~/server/auth";
-import Link from "next/link";
 import MovieCarousel from "./_components/MovieCarousel";
 
 export default async function Home() {
-  const session = await auth();
   return (
     <div className="bg-gray-900 min-h-screen">
       <div className="container mx-auto">

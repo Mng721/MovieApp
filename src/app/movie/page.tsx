@@ -4,7 +4,7 @@ import { api } from "~/trpc/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import MovieCard from "../_components/movieCard";
+import MovieCard from "~/app/_components/movieCard";
 
 export default function MoviesPage({
     searchParams,
@@ -46,45 +46,25 @@ export default function MoviesPage({
 
     // Hiển thị loading khi đang kiểm tra session
     if (status === "loading") {
-        return <div>Đang tải...</div>;
+        return <div className="flex min-h-svh flex-1 justify-center items-center bg-gray-900 text-4xl text-white">Đang tải...</div>;
     }
 
+    if (!query) {
+        return <div className="flex min-h-svh flex-1 justify-center items-center bg-gray-900 text-4xl text-white">Có phải bạn cần tìm gì không?</div>
+    }
     // Nếu không có session, không render gì (đã xử lý redirect trong useEffect)
     if (!session) {
         return null;
     }
 
     return (
-        <div className="p-4 bg-gray-900">
-            <h1 className="text-2xl mb-4 text-white">Tìm kiếm phim</h1>
+        <div className="p-4 bg-gray-900 min-h-screen">
+            <h1 className="text-2xl mb-4 text-white">{`Phim với từ khóa "${query}"`}</h1>
             {/* Danh sách phim từ TMDB */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 {movies?.map((movie: any, index: number) => (
                     <Link href={`/movie/${movie.id}`} key={`search-${index}`}>
                         <MovieCard movie={movie}></MovieCard>
-                    </Link>
-                ))}
-            </div>
-
-            {/* Danh sách phim yêu thích */}
-            <h1 className="text-2xl mb-4">Phim yêu thích</h1>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {favorites?.map((fav, index: number) => (
-                    <Link href={`/movie/${fav.movieId}`} key={`fav-${index}`}>
-                        <div key={fav.id} className="border p-4">
-                            <img
-                                src={`https://image.tmdb.org/t/p/w200${fav.posterPath}`}
-                                alt={fav.title}
-                                className="mb-2"
-                            />
-                            <h2 className="text-lg">{fav.title}</h2>
-                            <button
-                                onClick={() => removeFavorite.mutate({ id: fav.id })}
-                                className="bg-red-500 text-white p-2 mt-2"
-                            >
-                                Xóa
-                            </button>
-                        </div>
                     </Link>
                 ))}
             </div>
