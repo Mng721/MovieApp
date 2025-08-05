@@ -257,7 +257,7 @@ export default function Navbar() {
                                     </Link>
                                     <button
                                         onClick={handleSignOut}
-                                        className="flex hover:bg-gray-600 p-2 text-center items-center gap-3"
+                                        className="flex hover:bg-gray-600 p-2 text-center items-center gap-3 w-full cursor-pointer"
                                     >
                                         <FaSignOutAlt />
                                         Đăng xuất
@@ -355,7 +355,7 @@ export default function Navbar() {
                             </Link>
                             <button
                                 onClick={handleSignOut}
-                                className="hover:text-gray-300 flex items-center gap-3 cursor-pointer"
+                                className="hover:text-gray-300 flex items-center gap-3 w-full cursor-pointer"
                             >
                                 <FaSignOutAlt />
                                 Đăng xuất
