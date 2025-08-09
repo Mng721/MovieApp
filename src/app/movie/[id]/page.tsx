@@ -74,6 +74,12 @@ interface Movie {
     };
 }
 
+interface Rating {
+    id: number;
+    rating: number;
+    review: string | null;
+    createdAt: Date;
+}
 
 interface RelatedMovie {
     vote_count: number;
@@ -90,6 +96,9 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
     const [commentContent, setCommentContent] = useState("");
     const [replyContent, setReplyContent] = useState("");
     const [replyingTo, setReplyingTo] = useState<number | null>(null);
+    const [userRating, setUserRating] = useState<number>(0);
+    const [review, setReview] = useState('');
+    const [ratingError, setRatingError] = useState('');
 
     useEffect(() => {
         const fetchMovie = async () => {
@@ -107,6 +116,48 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
         fetchMovie();
     }, [id]);
 
+    // Lấy đánh giá trung bình và của người dùng
+    const { data: averageRatingData, refetch: refetchAverageRating } = api.ratings.getAverageRating.useQuery(
+        { movieId: parseInt(id) },
+        { enabled: !!movie }
+    );
+    const { data: userRatingData, refetch: refetchUserRating } = api.ratings.getUserRating.useQuery(
+        { movieId: parseInt(id) },
+        { enabled: !!session?.user && !!movie }
+    );
+
+    // Mutation để thêm/cập nhật đánh giá
+    const addOrUpdateRating = api.ratings.addOrUpdateRating.useMutation({
+        onSuccess: () => {
+            setRatingError('');
+            // Làm mới dữ liệu sau khi đánh giá
+            refetchAverageRating();
+            refetchUserRating();
+        },
+        onError: (error) => {
+            setRatingError(error.message);
+        },
+    });
+
+    useEffect(() => {
+        if (userRatingData) {
+            setUserRating(userRatingData.rating);
+            setReview(userRatingData.review || '');
+        }
+    }, [userRatingData]);
+
+    const handleSubmitRating = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!session?.user) {
+            setRatingError('Please log in to rate this movie.');
+            return;
+        }
+        if (userRating === null || userRating < 1 || userRating > 10) {
+            setRatingError('Please select a rating between 1 and 10.');
+            return;
+        }
+        addOrUpdateRating.mutate({ movieId: parseInt(id), rating: userRating, review });
+    };
     const { data: favorites, refetch: refetchFavorites } =
         api.movies.getFavorites.useQuery(undefined, {
             enabled: !!session,
@@ -265,7 +316,9 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                                 ))}
                             </p>
                             <p className="text-yellow-400 mt-2">
-                                ⭐ {movie.vote_average.toFixed(1)}/10 <span className="text-gray-400">{`(${movie.vote_count})`}</span>
+                                ⭐ {movie.vote_average.toFixed(1)}/10 <span className="text-gray-400">{`(${movie.vote_count})`}</span> |{' '}
+                                {averageRatingData?.averageRating || 0}/10 (
+                                {averageRatingData?.ratingCount ? `${averageRatingData.ratingCount} users` : "User"} ratings)
                             </p>
                             <p className="mt-4">{movie.overview}</p>
                             {session && (
@@ -348,6 +401,56 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                         )}
                     </div>
                     <div className="md:col-span-2">
+                        {/* Form đánh giá */}
+                        {session && (
+                            <div className="mb-6">
+                                <h2 className="text-2xl font-semibold mb-4">Your Rating</h2>
+                                <form onSubmit={handleSubmitRating} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300">
+                                            Rating (1-10)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="10"
+                                            value={userRating || ""}
+                                            onChange={(e) => setUserRating(Number(e.target.value) || 0)}
+                                            className="mt-1 p-2 w-full bg-gray-700 text-white rounded"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300">
+                                            Review (Optional)
+                                        </label>
+                                        <textarea
+                                            value={review}
+                                            onChange={(e) => setReview(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-gray-700 text-white rounded h-24"
+                                            placeholder="Write your review here..."
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    >
+                                        Submit Rating
+                                    </button>
+                                    {ratingError && <p className="text-red-500 text-sm">{ratingError}</p>}
+                                </form>
+                                {userRatingData && (
+                                    <p className="mt-2 text-gray-300">
+                                        Your rating: {userRatingData.rating}/10{' '}
+                                        {userRatingData.review && `| Review: ${userRatingData.review}`}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        {!session && (
+                            <p className="text-gray-400">
+                                Please <Link href="/login" className="text-blue-500">log in</Link> to rate this movie.
+                            </p>
+                        )}
                         <div className="mb-6">
                             <h2 className="text-2xl font-semibold">Diễn viên</h2>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">

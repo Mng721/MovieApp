@@ -1,5 +1,5 @@
-import { relations, sql } from "drizzle-orm";
-import { index, integer, jsonb, pgTableCreator, primaryKey, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { max, relations, sql } from "drizzle-orm";
+import { index, integer, jsonb, pgTableCreator, primaryKey, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
 /**
@@ -151,6 +151,19 @@ export const commentReplies = createTable("comment_replies", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+
+export const ratings = createTable('ratings', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  movieId: integer('movie_id'), // Có thể null nếu là TV series
+  tvSeriesId: integer('tv_series_id'), // Có thể null nếu là movie
+  rating: integer('rating').notNull(), // Điểm từ 1 đến 10
+  review: text('review'), // Nhận xét tùy chọn
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 // Định nghĩa quan hệ
 export const rolesRelations = relations(roles, ({ many, one }) => ({
   users: many(users),
@@ -186,7 +199,12 @@ export const commentsRelations = relations(comments, ({ many, one }) => ({
   }),
   replies: many(commentReplies),
 }));
-
+export const ratingsRelations = relations(ratings, ({ one }) => ({
+  user: one(users, {
+    fields: [ratings.userId],
+    references: [users.id],
+  }),
+}));
 export const commentRepliesRelations = relations(commentReplies, ({ one }) => ({
   user: one(users, {
     fields: [commentReplies.userId],
