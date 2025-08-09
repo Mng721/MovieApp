@@ -63,7 +63,7 @@ Dưới đây là một số ảnh chụp màn hình của **MovieApp**:
 
 1. **Clone repository**:
    ```bash
-   git clone https://github.com/your-username/movieapp.git
+   git clone https://github.com/Mng721/movieapp.git
    cd movieapp
    ```
 2. **Cài đặt dependencies**:
