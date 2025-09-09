@@ -1,5 +1,15 @@
 import { max, relations, sql } from "drizzle-orm";
-import { index, integer, jsonb, pgTableCreator, primaryKey, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  jsonb,
+  pgTableCreator,
+  primaryKey,
+  serial,
+  text,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
 /**
@@ -18,7 +28,11 @@ export const users = createTable("user", (d) => ({
   name: d.varchar({ length: 255 }),
   password: d.varchar({ length: 255 }),
   email: d.varchar({ length: 255 }).notNull(),
-  roleId: d.integer().notNull().default(3),
+  roleId: d
+    .integer()
+    .notNull()
+    .default(3)
+    .references(() => roles.id), // Mặc định là role user
   emailVerified: d
     .timestamp({
       mode: "date",
@@ -39,10 +53,11 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   commentReplies: many(commentReplies),
 }));
 
-
 export const watchHistory = createTable("watch_history", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  userId: varchar("user_id")
+    .references(() => users.id)
+    .notNull(),
   movieId: integer("movie_id").notNull(),
   watchedAt: timestamp("watched_at").defaultNow(),
   metadata: jsonb("metadata"), // Lưu thêm thông tin như thời gian xem, trạng thái
@@ -62,8 +77,12 @@ export const permissions = createTable("permissions", {
 
 // Bảng trung gian role_permissions
 export const rolePermissions = createTable("role_permissions", {
-  roleId: integer("role_id").notNull().references(() => roles.id),
-  permissionId: integer("permission_id").notNull().references(() => permissions.id),
+  roleId: integer("role_id")
+    .notNull()
+    .references(() => roles.id),
+  permissionId: integer("permission_id")
+    .notNull()
+    .references(() => permissions.id),
 });
 
 export const accounts = createTable(
@@ -87,7 +106,7 @@ export const accounts = createTable(
   (t) => [
     primaryKey({ columns: [t.provider, t.providerAccountId] }),
     index("account_user_id_idx").on(t.userId),
-  ]
+  ],
 );
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -104,7 +123,7 @@ export const sessions = createTable(
       .references(() => users.id),
     expires: d.timestamp({ mode: "date", withTimezone: true }).notNull(),
   }),
-  (t) => [index("t_user_id_idx").on(t.userId)]
+  (t) => [index("t_user_id_idx").on(t.userId)],
 );
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -118,24 +137,28 @@ export const verificationTokens = createTable(
     token: d.varchar({ length: 255 }).notNull(),
     expires: d.timestamp({ mode: "date", withTimezone: true }).notNull(),
   }),
-  (t) => [primaryKey({ columns: [t.identifier, t.token] })]
+  (t) => [primaryKey({ columns: [t.identifier, t.token] })],
 );
 
 // Thêm bảng favorite_movies
 export const favoriteMovies = createTable("favorite_movies", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id),
   movieId: integer("movie_id").notNull(), // ID phim từ TMDB
-  title: varchar("title",{length: 255}).notNull(), // Tiêu đề phim
+  title: varchar("title", { length: 255 }).notNull(), // Tiêu đề phim
   posterPath: varchar("poster_path"), // Đường dẫn ảnh poster từ TMDB
   addedAt: timestamp("added_at").defaultNow(),
-  genre: jsonb('genres').notNull().$type<{ id: number; name: string }[]>(), 
+  genre: jsonb("genres").notNull().$type<{ id: number; name: string }[]>(),
 });
 
 // Thêm bảng comment
 export const comments = createTable("comments", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   movieId: integer("movie_id"),
   tvSeriesId: integer("tv_series_id"), // Thêm cột tvSeriesId
   content: varchar("content").notNull(),
@@ -145,23 +168,26 @@ export const comments = createTable("comments", {
 // Thêm bảng trả lời comment
 export const commentReplies = createTable("comment_replies", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  commentId: integer("comment_id").notNull().references(() => comments.id, { onDelete: "cascade" }),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  commentId: integer("comment_id")
+    .notNull()
+    .references(() => comments.id, { onDelete: "cascade" }),
   content: varchar("content").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-
-export const ratings = createTable('ratings', {
-  id: serial('id').primaryKey(),
-  userId: varchar('user_id')
+export const ratings = createTable("ratings", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id")
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  movieId: integer('movie_id'), // Có thể null nếu là TV series
-  tvSeriesId: integer('tv_series_id'), // Có thể null nếu là movie
-  rating: integer('rating').notNull(), // Điểm từ 1 đến 10
-  review: text('review'), // Nhận xét tùy chọn
-  createdAt: timestamp('created_at').defaultNow(),
+    .references(() => users.id, { onDelete: "cascade" }),
+  movieId: integer("movie_id"), // Có thể null nếu là TV series
+  tvSeriesId: integer("tv_series_id"), // Có thể null nếu là movie
+  rating: integer("rating").notNull(), // Điểm từ 1 đến 10
+  review: text("review"), // Nhận xét tùy chọn
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Định nghĩa quan hệ
@@ -174,16 +200,19 @@ export const permissionsRelations = relations(permissions, ({ many }) => ({
   rolePermissions: many(rolePermissions),
 }));
 
-export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
-  role: one(roles, {
-    fields: [rolePermissions.roleId],
-    references: [roles.id],
+export const rolePermissionsRelations = relations(
+  rolePermissions,
+  ({ one }) => ({
+    role: one(roles, {
+      fields: [rolePermissions.roleId],
+      references: [roles.id],
+    }),
+    permission: one(permissions, {
+      fields: [rolePermissions.permissionId],
+      references: [permissions.id],
+    }),
   }),
-  permission: one(permissions, {
-    fields: [rolePermissions.permissionId],
-    references: [permissions.id],
-  }),
-}));
+);
 
 export const favoriteMoviesRelations = relations(favoriteMovies, ({ one }) => ({
   user: one(users, {
