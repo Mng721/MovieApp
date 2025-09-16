@@ -43,6 +43,7 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
                         },
                     }
                 );
+                console.log(directorResponse.data)
                 setDirector(directorResponse.data);
 
                 // Lấy danh sách phim của đạo diễn

@@ -14,7 +14,7 @@ interface Movie {
     id: number;
     title: string;
     poster_path: string;
-    release_date: string;
+    release_date?: string;
     vote_average?: number;
     name?: string;
     first_air_date?: string
@@ -25,11 +25,20 @@ interface MovieCarouselProps {
     url?: string;
     title: string;
     isMovie?: boolean;
+    listMovies?: Movie[];
 }
 
-export default function MovieCarousel({ url, title, isMovie = true }: MovieCarouselProps) {
+export default function MovieCarousel({ url, title, isMovie = true, listMovies }: MovieCarouselProps) {
     const [movies, setMovies] = useState<Movie[]>([]);
 
+    // Nếu có listMovies truyền vào, sử dụng nó thay vì fetch từ API
+    useEffect(() => {
+        if (listMovies && listMovies.length > 0) {
+            setMovies(listMovies);
+        }
+    }, [listMovies]);
+
+    // Fetch phim từ API nếu không có listMovies
     useEffect(() => {
         if (!url) return
         const fetchMovies = async () => {
@@ -81,7 +90,7 @@ export default function MovieCarousel({ url, title, isMovie = true }: MovieCarou
                                 title: movie.title,
                                 poster_path: movie.poster_path || "",
                                 vote_average: movie.vote_average,
-                                release_date: movie.release_date, // Có thể thêm trường release_date vào favoriteMovies nếu cần
+                                release_date: movie.release_date ?? "", // Có thể thêm trường release_date vào favoriteMovies nếu cần
                             }}></MovieCard> :
                             <TVSeriesCard tvSeries={
                                 {

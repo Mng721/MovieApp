@@ -4,7 +4,6 @@ import { api } from "~/trpc/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import MovieCard from "~/app/_components/movieCard";
 
 export default function MoviesPage({
 }: {
