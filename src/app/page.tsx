@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 
 import MovieCarousel from "./_components/MovieCarousel";
 import FavCarousel from "./_components/favCarousel";
+import SuggestedCarousel from "./_components/suggestedCarousel";
 
 export default async function Home() {
 
@@ -13,8 +14,11 @@ export default async function Home() {
           url="/movie/now_playing"
           title="Phim Mới"
         />
-        {/* Carousel cho phim mới */}
+        {/* Carousel cho phim yêu thích */}
         <FavCarousel />
+
+        {/* Carousel cho phim gợi ý */}
+        <SuggestedCarousel />
 
         {/* Carousel cho phim phổ biến */}
         <MovieCarousel

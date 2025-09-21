@@ -4,9 +4,10 @@ interface Movie {
   vote_count?: number;
   id: number;
   title: string;
-  poster_path: string;
-  release_date: string;
-  vote_average?: number; // Thêm trường vote_average
+  poster_path?: string;
+  release_date?: string;
+  vote_average: number; // Thêm trường vote_average
+  genre: { id: number; name: string }[]; // Thêm trường genre
 }
 
 interface MovieCardProps {
@@ -35,9 +36,19 @@ export default function MovieCard({ movie }: MovieCardProps) {
           <p className="text-gray-400 text-sm">{movie.release_date}</p>
           {movie.vote_average ? (
             <p className="text-yellow-400 text-sm mt-1">
-              ⭐ {movie.vote_average.toFixed(1)}/10
+              ⭐ {(+movie.vote_average).toFixed(1)}/10
             </p>
           ) : (<div className="text-yellow-400 text-sm mt-1">⭐ N/A</div>)}
+          {movie.genre && <div className="mt-2">
+            {movie.genre.slice(0, 3).map((g) => (
+              <span
+                key={g.id}
+                className="text-xs text-gray-300 bg-gray-800 rounded-full px-2 py-1 mr-1"
+              >
+                {g.name}
+              </span>
+            ))}
+          </div>}
         </div>
       </div>
     </Link>

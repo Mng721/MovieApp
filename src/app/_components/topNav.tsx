@@ -165,10 +165,10 @@ export default function Navbar() {
 
                 <div className="hidden md:flex space-x-4 items-center">
                     <Link href="/" className="hover:text-gray-300">
-                        Home
+                        Trang Chủ
                     </Link>
-                    <Link href="/movie" className="hover:text-gray-300">
-                        Movies
+                    <Link href="/ranking" className="hover:text-gray-300">
+                        Top phim
                     </Link>
                     {/* Dropdown thể loại */}
                     <div className="relative" ref={dropdownRef}>
@@ -176,7 +176,7 @@ export default function Navbar() {
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             className="hover:text-gray-300 flex items-center gap-1 cursor-pointer"
                         >
-                            Genres
+                            Thể loại
                             <svg
                                 className={`w-4 h-4 transform ${isDropdownOpen ? "rotate-180" : ""}`}
                                 fill="none"
@@ -299,17 +299,17 @@ export default function Navbar() {
             {isOpen && (
                 <div className="md:hidden mt-2 space-y-2">
                     <Link href="/" className="block hover:text-gray-300">
-                        Home
+                        Trang chủ
                     </Link>
-                    <Link href="/movies" className="block hover:text-gray-300">
-                        Movies
+                    <Link href="/ranking" className="block hover:text-gray-300">
+                        Top Phim
                     </Link>
                     <div ref={dropdownRef}>
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             className="block hover:text-gray-300 w-full text-left"
                         >
-                            Genres
+                            Thể loại
                         </button>
                         {isDropdownOpen && (
                             <div className="pl-4 space-y-1 py-2">

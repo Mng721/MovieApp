@@ -1,5 +1,6 @@
 import { max, relations, sql } from "drizzle-orm";
 import {
+  decimal,
   index,
   integer,
   jsonb,
@@ -151,6 +152,8 @@ export const favoriteMovies = createTable("favorite_movies", {
   posterPath: varchar("poster_path"), // Đường dẫn ảnh poster từ TMDB
   addedAt: timestamp("added_at").defaultNow(),
   genre: jsonb("genres").notNull().$type<{ id: number; name: string }[]>(),
+  vote_average: decimal("vote_average"), // Điểm đánh giá
+  release_date: varchar("release_date", { length: 50 }), // Ngày phát hành
 });
 
 // Thêm bảng comment

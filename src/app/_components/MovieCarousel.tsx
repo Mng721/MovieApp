@@ -14,7 +14,7 @@ interface Movie {
     id: number;
     title: string;
     poster_path: string;
-    release_date?: string;
+    release_date: string | null;
     vote_average?: number;
     name?: string;
     first_air_date?: string
@@ -26,6 +26,7 @@ interface MovieCarouselProps {
     title: string;
     isMovie?: boolean;
     listMovies?: Movie[];
+
 }
 
 export default function MovieCarousel({ url, title, isMovie = true, listMovies }: MovieCarouselProps) {
@@ -48,6 +49,7 @@ export default function MovieCarousel({ url, title, isMovie = true, listMovies }
                     {
                         params: {
                             api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
+                            language: "vi-VN"
                         },
                     }
                 );
@@ -89,8 +91,9 @@ export default function MovieCarousel({ url, title, isMovie = true, listMovies }
                                 id: movie.id,
                                 title: movie.title,
                                 poster_path: movie.poster_path || "",
-                                vote_average: movie.vote_average,
-                                release_date: movie.release_date ?? "", // Có thể thêm trường release_date vào favoriteMovies nếu cần
+                                vote_average: movie.vote_average ?? 0,
+                                release_date: movie.release_date ?? "",
+                                genre: [], // Thêm trường genre để tránh lỗi
                             }}></MovieCard> :
                             <TVSeriesCard tvSeries={
                                 {

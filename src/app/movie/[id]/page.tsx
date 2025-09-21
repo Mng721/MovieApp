@@ -108,13 +108,14 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                     params: {
                         api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
                         append_to_response: "credits,videos",
+                        language: "vi-VN"
                     },
                 }
             );
             setMovie(response.data);
         };
         fetchMovie();
-    }, [id]);
+    }, []);
 
     // Lấy đánh giá trung bình và của người dùng
     const { data: averageRatingData, refetch: refetchAverageRating } = api.ratings.getAverageRating.useQuery(
@@ -172,7 +173,10 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
 
     const { data: relatedMovies } = api.movies.getRelatedMovies.useQuery(
         { movieId: parseInt(id) },
-        { enabled: !!movie }
+        {
+            enabled: !!movie,
+            refetchOnWindowFocus: true,
+        },
     );
 
     const addComment = api.comments.addComment.useMutation({
@@ -344,7 +348,9 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                                                     movieId: movie.id,
                                                     title: movie.title,
                                                     posterPath: movie.poster_path,
-                                                    genres: movie.genres
+                                                    genres: movie.genres,
+                                                    vote_average: movie.vote_average,
+                                                    release_date: movie.release_date,
                                                 })
                                             }
                                             className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded cursor-pointer"

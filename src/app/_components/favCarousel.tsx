@@ -15,7 +15,7 @@ const favCarousel = () => {
         });
     return (
         <div>
-            {session && favorites && (
+            {session && favorites && favorites.length > 0 && (
                 <MovieCarousel
                     isMovie={true}
                     title="Phim Yêu Thích"
@@ -23,6 +23,8 @@ const favCarousel = () => {
                         id: fav.movieId,
                         title: fav.title,
                         poster_path: fav.posterPath || "",
+                        vote_average: fav.vote_average !== null ? Number(fav.vote_average) : undefined,
+                        release_date: fav.release_date,
                     }))}
                 />
             )}
