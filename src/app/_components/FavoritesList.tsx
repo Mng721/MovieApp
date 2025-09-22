@@ -14,12 +14,11 @@ type Genre = {
 export default function FavoritesList() {
     const { data: session } = useSession();
     const [genreId, setGenreId] = useState<number | undefined>(undefined);
-    const [sortBy, setSortBy] = useState<"vote_average.desc" | "vote_average.asc" | undefined>(
-        undefined
-    );
+    const [sortBy, setSortBy] = useState<"added_at" | "vote_average" | "release_date">("added_at");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
     const { data, isLoading, error } = api.movies.getFavoritesWithDetails.useQuery(
-        { genreId, sortBy },
+        { genreId, sortBy, sortOrder },
         { enabled: !!session }
     );
 
@@ -32,10 +31,16 @@ export default function FavoritesList() {
         setGenreId(value ? parseInt(value) : undefined);
     };
 
-    const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value as "vote_average.desc" | "vote_average.asc" | "";
+    const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value as "added_at" | "vote_average" | "release_date" | "";
         setSortBy(value || undefined);
     };
+
+    const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value as "asc" | "desc";
+        setSortOrder(value);
+    }
+
     if (isLoading) {
         return <div className="bg-gray-900 text-white grid min-h-screen place-items-center text-4xl">Đang tải...</div>;
     }
@@ -68,12 +73,23 @@ export default function FavoritesList() {
                     <label className="text-white mr-2">Sắp xếp theo điểm:</label>
                     <select
                         value={sortBy || ""}
-                        onChange={handleSortChange}
+                        onChange={handleSortByChange}
                         className="p-2 rounded bg-gray-800 text-white"
                     >
-                        <option value="">Mặc định</option>
-                        <option value="vote_average.desc">Cao đến Thấp</option>
-                        <option value="vote_average.asc">Thấp đến Cao</option>
+                        <option value="vote_average">Điểm đánh giá</option>
+                        <option value="added_at">Ngày thêm</option>
+                        <option value="release_date">Ngày phát hành</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="text-white mr-2">Thứ tự:</label>
+                    <select
+                        value={sortOrder}
+                        onChange={handleSortOrderChange}
+                        className="p-2 rounded bg-gray-800 text-white"
+                    >
+                        <option value="desc">Giảm dần</option>
+                        <option value="asc">Tăng dần</option>
                     </select>
                 </div>
             </div>
@@ -82,7 +98,15 @@ export default function FavoritesList() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {movies.map((movie) => (
-                        <MovieCard key={movie.id} movie={movie} />
+                        <MovieCard
+                            key={movie.id}
+                            movie={{
+                                ...movie,
+                                vote_average: typeof movie.vote_average === "string"
+                                    ? parseFloat(movie.vote_average)
+                                    : movie.vote_average,
+                            }}
+                        />
                     ))}
                 </div>
             )}

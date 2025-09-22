@@ -6,8 +6,8 @@ interface Movie {
   title: string;
   poster_path?: string;
   release_date?: string;
-  vote_average: number; // Thêm trường vote_average
-  genre: { id: number; name: string }[]; // Thêm trường genre
+  vote_average?: number; // Thêm trường vote_average
+  genre?: { id: number; name: string }[]; // Thêm trường genre
 }
 
 interface MovieCardProps {
@@ -34,11 +34,11 @@ export default function MovieCard({ movie }: MovieCardProps) {
         <div className="p-4 group-hover:bg-black/20">
           <h3 className="text-white font-semibold truncate transition duration-300 group-hover:text-white/50">{movie.title}</h3>
           <p className="text-gray-400 text-sm">{movie.release_date}</p>
-          {movie.vote_average ? (
+          {movie.vote_average && (
             <p className="text-yellow-400 text-sm mt-1">
               ⭐ {(+movie.vote_average).toFixed(1)}/10
             </p>
-          ) : (<div className="text-yellow-400 text-sm mt-1">⭐ N/A</div>)}
+          )}
           {movie.genre && <div className="mt-2">
             {movie.genre.slice(0, 3).map((g) => (
               <span

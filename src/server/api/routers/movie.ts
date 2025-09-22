@@ -159,7 +159,8 @@ export const moviesRouter = createTRPCRouter({
     .input(
       z.object({
         genreId: z.number().optional(), // Lọc theo thể loại
-        sortBy: z.enum(["vote_average.desc", "vote_average.asc"]).optional(), // Sắp xếp theo điểm
+        sortBy: z.enum(["vote_average", "added_at", "release_date"]).optional(), // Sắp xếp theo điểm
+        sortOrder: z.enum(["asc", "desc"]).optional(), // Thứ tự sắp xếp
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -180,17 +181,6 @@ export const moviesRouter = createTRPCRouter({
       if (favorites.length === 0) {
         return { movies: [], genres: [] };
       }
-
-      // Lấy chi tiết từng phim
-      type Movie = {
-        id: number;
-        title: string;
-        poster_path?: string;
-        vote_average: number;
-        release_date?: string;
-        genre_ids: number[];
-        // Add other fields as needed based on TMDB response
-      };
 
       // Define GenreResponse type for TMDB genre API response
       type GenreResponse = {
@@ -220,15 +210,28 @@ export const moviesRouter = createTRPCRouter({
       //   );
       // }
 
-      // Sắp xếp theo điểm
+      // Sắp xếp theo yêu cầu
       if (input.sortBy) {
-        filteredMovies.sort((a, b) =>
-          input.sortBy === "vote_average.desc"
-            ? b.vote_average - a.vote_average
-            : a.vote_average - b.vote_average,
-        );
+        filteredMovies.sort((a, b) => {
+          let fieldA: number | string = "";
+          let fieldB: number | string = "";
+          if (input.sortBy === "vote_average") {
+            fieldA = a.vote_average || 0;
+            fieldB = b.vote_average || 0;
+          } else if (input.sortBy === "added_at") {
+            const favA = favorites.find((f) => f.movieId === a.id);
+            const favB = favorites.find((f) => f.movieId === b.id);
+            fieldA = favA?.addedAt ? new Date(favA.addedAt).getTime() : 0;
+            fieldB = favB?.addedAt ? new Date(favB.addedAt).getTime() : 0;
+          } else if (input.sortBy === "release_date") {
+            fieldA = a.release_date || "";
+            fieldB = b.release_date || "";
+          }
+          if (fieldA < fieldB) return input.sortOrder === "asc" ? -1 : 1;
+          if (fieldA > fieldB) return input.sortOrder === "asc" ? 1 : -1;
+          return 0;
+        });
       }
-
       // Lấy danh sách thể loại từ TMDB để hiển thị bộ lọc
       const genreResponse = await axios.get<GenreResponse>(
         `${baseUrl}/genre/movie/list`,

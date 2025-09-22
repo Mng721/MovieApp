@@ -71,6 +71,7 @@ export default function ActorPage({ params }: { params: Promise<{ id: string }> 
         fetchActorDetails();
     }, [id]);
 
+    console.log(actor, credits);
     if (!actor) {
         return <div className="bg-gray-900 min-h-screen text-white p-4">Đang tải...</div>;
     }
@@ -128,7 +129,7 @@ export default function ActorPage({ params }: { params: Promise<{ id: string }> 
                                 }}
                             />
                             <p className="text-gray-400 text-sm mt-2">
-                                Vai: {credit.character || "Không xác định"}
+                                Đóng vai: {credit.character || "Không xác định"}
                             </p>
                         </div>
                     ))}

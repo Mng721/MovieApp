@@ -40,6 +40,7 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
                     {
                         params: {
                             api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
+                            append_to_response: "movie_credits",
                         },
                     }
                 );
