@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { FaHeart, FaSignOutAlt, FaUser } from "react-icons/fa";
+import { useDebounce } from "@uidotdev/usehooks";
 
 interface Movie {
     id: number;
@@ -18,7 +19,6 @@ interface Genre {
     name: string;
 }
 
-
 export default function Navbar() {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -27,15 +27,26 @@ export default function Navbar() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false); // State cho dropdown người dùng
+    //Sử dụng useDebounce để giảm tần suất gọi API khi người dùng gõ
+    const debouncedSearchQuery = useDebounce(searchQuery, 1000);
+    // const [searchResults, setSearchResults] = useState<Movie[]>([]);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const isAdmin = session?.user?.roleId === 1;
 
     const { data: searchResults = [], refetch } = api.movies.searchMovies.useQuery(
-        { query: searchQuery },
+        { query: debouncedSearchQuery },
         { enabled: false }
     );
+    useEffect(() => {
+        if (debouncedSearchQuery.length >= 2) {
+            refetch();
+            setIsSearchOpen(true);
+        } else {
+            setIsSearchOpen(false);
+        }
+    }, [debouncedSearchQuery, refetch]);
 
     // Lấy thông tin người dùng
     const { data: userData } = api.user.getUser.useQuery()

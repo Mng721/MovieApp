@@ -3,6 +3,7 @@ import { useState, useEffect, use } from "react";
 import axios from "axios";
 import Link from "next/link";
 import MovieCard from "~/app/_components/movieCard";
+import { api } from "~/trpc/react";
 
 interface Director {
     id: number;
@@ -28,8 +29,7 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
     const { id } = use(params);
     const [director, setDirector] = useState<Director | null>(null);
     const [credits, setCredits] = useState<MovieCredit[]>([]);
-
-    console.log(credits)
+    const [awardsList, setAwardsList] = useState<any[]>([]);
     // Lấy thông tin đạo diễn và danh sách phim
     useEffect(() => {
         const fetchDirectorDetails = async () => {
@@ -44,7 +44,6 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
                         },
                     }
                 );
-                console.log(directorResponse.data)
                 setDirector(directorResponse.data);
 
                 // Lấy danh sách phim của đạo diễn
@@ -56,6 +55,7 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
                         },
                     }
                 );
+
                 // Lọc các phim mà người này làm đạo diễn và sắp xếp theo ngày phát hành (mới nhất trước)
                 const directedMovies = creditsResponse.data.crew
                     .filter((credit: any) => credit.job === "Director")
@@ -66,6 +66,8 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
                     )
                     .slice(0, 10); // Lấy 10 phim đầu tiên
                 setCredits(directedMovies);
+
+                // setAwardsList(awards || []);
             } catch (error) {
                 console.error("Error fetching director details:", error);
             }
@@ -73,8 +75,21 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
         fetchDirectorDetails();
     }, [id]);
 
+    const { data: awards, refetch: refetchAwards } = api.awards.getAwardsByDirector.useQuery(
+        { directorId: Number(525) },
+        {
+            enabled: !!director, // Chỉ chạy khi thông tin đạo diễn đã được tải
+        }
+    );
+
+    useEffect(() => {
+        if (awards) {
+            setAwardsList(awards);
+        }
+    }, [awards]);
+
     if (!director) {
-        return <div className="bg-gray-900 min-h-screen text-white pt-16">Đang tải...</div>;
+        return <div className="bg-gray-900 min-h-screen text-white pt-16 grid place-items-center text-4xl">Đang tải...</div>;
     }
 
     return (
@@ -111,6 +126,20 @@ export default function DirectorPage({ params }: { params: Promise<{ id: string 
                             <p className="text-gray-300 mt-2">
                                 {director.biography || "Không có tiểu sử."}
                             </p>
+                        </div>
+                        <div className="mt-4">
+                            <h2 className="text-2xl font-semibold">Giải thưởng</h2>
+                            {awardsList.length > 0 ? (
+                                <ul className="list-disc list-inside mt-2">
+                                    {awardsList.map((award) => (
+                                        <li key={award.id}>
+                                            {award.name} ({award.year}) - {award.category}
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-gray-400 mt-2">Không có dữ liệu giải thưởng.</p>
+                            )}
                         </div>
                     </div>
                 </div>

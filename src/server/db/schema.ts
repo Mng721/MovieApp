@@ -181,6 +181,7 @@ export const commentReplies = createTable("comment_replies", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Thêm bảng ratings
 export const ratings = createTable("ratings", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id")
@@ -191,6 +192,17 @@ export const ratings = createTable("ratings", {
   rating: integer("rating").notNull(), // Điểm từ 1 đến 10
   review: text("review"), // Nhận xét tùy chọn
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Thêm bảng giải thưởng
+export const awards = createTable("awards", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(), // Tên giải thưởng
+  year: integer("year").notNull(), // Năm nhận giải
+  category: varchar("category").notNull(), // Hạng mục giải thưởng
+  result: varchar("result").notNull(), // Kết quả (Won, Nominated)
+  recipientId: integer("recipient_id").notNull(), // ID của người nhận (diễn viên, đạo diễn, v.v.)
+  recipientType: varchar("recipient_type").notNull(), // Loại người nhận (Actor, Director, etc.)
 });
 
 // Định nghĩa quan hệ

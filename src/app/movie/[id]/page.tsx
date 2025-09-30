@@ -8,6 +8,8 @@ import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import MovieCard from "~/app/_components/movieCard";
 import { Bounce, toast, ToastContainer } from "react-toastify";
+import StarRating from "~/app/_components/StarsRating";
+import { FaStar } from "react-icons/fa";
 interface Genre {
     id: number;
     name: string;
@@ -74,13 +76,6 @@ interface Movie {
     };
 }
 
-interface Rating {
-    id: number;
-    rating: number;
-    review: string | null;
-    createdAt: Date;
-}
-
 interface RelatedMovie {
     vote_count: number;
     id: number;
@@ -98,6 +93,7 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
     const [replyingTo, setReplyingTo] = useState<number | null>(null);
     const [userRating, setUserRating] = useState<number>(0);
     const [review, setReview] = useState('');
+    const [hover, setHover] = useState<number | null>(null);
     const [ratingError, setRatingError] = useState('');
 
     useEffect(() => {
@@ -108,10 +104,10 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                     params: {
                         api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
                         append_to_response: "credits,videos",
-                        language: "vi-VN"
                     },
                 }
             );
+            console.log(response.data);
             setMovie(response.data);
         };
         fetchMovie();
@@ -126,6 +122,12 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
         { movieId: parseInt(id) },
         { enabled: !!session?.user && !!movie }
     );
+    useEffect(() => {
+        if (userRatingData) {
+            setUserRating(userRatingData.rating);
+            setReview(userRatingData.review || '');
+        }
+    }, [userRatingData]);
 
     // Mutation để thêm/cập nhật đánh giá
     const addOrUpdateRating = api.ratings.addOrUpdateRating.useMutation({
@@ -286,6 +288,14 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
         (video) => video.type === "Trailer" && video.site === "YouTube"
     );
 
+    const handleRating = (value: number) => {
+        if (!session) {
+            alert("Vui lòng đăng nhập để đánh giá!");
+            return;
+        }
+        setUserRating(value);
+    };
+
     return (
         <div className="bg-gray-900 text-white flex flex-col min-h-screen">
             <ToastContainer />
@@ -416,24 +426,44 @@ export default function MoviePage({ params }: { params: Promise<{ id: string }> 
                                         <label className="block text-sm font-medium text-gray-300">
                                             Rating (1-10)
                                         </label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max="10"
-                                            value={userRating || ""}
-                                            onChange={(e) => setUserRating(Number(e.target.value) || 0)}
-                                            className="mt-1 p-2 w-full bg-gray-700 text-white rounded"
-                                        />
+                                        <div className="flex items-center gap-1">
+                                            {[...Array(10)].map((_, index) => {
+                                                const ratingValue = index + 1;
+                                                return (
+                                                    <label key={index}>
+                                                        <input
+                                                            type="radio"
+                                                            name={`rating-${movie.id}`}
+                                                            value={ratingValue}
+                                                            onClick={() => handleRating(ratingValue)} // Scale 1-5 thành 1-10
+                                                            className="hidden"
+                                                        />
+                                                        <FaStar
+                                                            className={`cursor-pointer text-2xl transition-colors ${ratingValue <= (hover || userRating || 0)
+                                                                ? "text-yellow-400"
+                                                                : "text-gray-300"
+                                                                }`}
+                                                            onMouseEnter={() => setHover(ratingValue)}
+                                                            onMouseLeave={() => setHover(null)}
+                                                        />
+                                                    </label>
+                                                );
+                                            })}
+                                            <span className="ml-2 text-sm">
+                                                {userRating ? `${userRating}/10` : "Chưa đánh giá"}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300">
                                             Review (Optional)
                                         </label>
                                         <textarea
-                                            value={review}
+                                            value={userRatingData ? userRatingData.review : review}
+                                            disabled={userRatingData ? true : false}
                                             onChange={(e) => setReview(e.target.value)}
-                                            className="mt-1 p-2 w-full bg-gray-700 text-white rounded h-24"
-                                            placeholder="Write your review here..."
+                                            className={`mt-1 p-2 w-full bg-gray-700 text-white rounded h-24 resize-y ${userRatingData ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            placeholder={userRatingData ? 'You have already submitted a review.' : 'Write your review here...'}
                                         />
                                     </div>
                                     <button

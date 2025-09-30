@@ -3,6 +3,7 @@ import { useState, useEffect, use } from "react";
 import axios from "axios";
 import Link from "next/link";
 import MovieCard from "~/app/_components/movieCard";
+import { api } from "~/trpc/react";
 
 interface Actor {
     id: number;
@@ -30,6 +31,7 @@ export default function ActorPage({ params }: { params: Promise<{ id: string }> 
     const { id } = use(params);
     const [actor, setActor] = useState<Actor | null>(null);
     const [credits, setCredits] = useState<MovieCredit[]>([]);
+    const [awardsList, setAwardsList] = useState<any[]>([]);
 
     // Lấy thông tin diễn viên và danh sách phim
     useEffect(() => {
@@ -71,9 +73,21 @@ export default function ActorPage({ params }: { params: Promise<{ id: string }> 
         fetchActorDetails();
     }, [id]);
 
-    console.log(actor, credits);
+    const { data: awards, refetch: refetchAwards } = api.awards.getAwardsByActor.useQuery(
+        { actorId: Number(id) },
+        {
+            enabled: !!actor,
+        }
+    );
+
+    useEffect(() => {
+        if (awards) {
+            setAwardsList(awards);
+        }
+    }, [awards]);
+
     if (!actor) {
-        return <div className="bg-gray-900 min-h-screen text-white p-4">Đang tải...</div>;
+        return <div className="bg-gray-900 min-h-screen text-white pt-16 grid place-items-center text-4xl">Đang tải...</div>;
     }
 
     return (
@@ -109,6 +123,20 @@ export default function ActorPage({ params }: { params: Promise<{ id: string }> 
                             <p className="text-gray-300 mt-2">
                                 {actor.biography || "Không có tiểu sử."}
                             </p>
+                        </div>
+                        <div className="mt-4">
+                            <h2 className="text-2xl font-semibold">Giải thưởng</h2>
+                            {awardsList.length > 0 ? (
+                                <ul className="list-disc list-inside mt-2">
+                                    {awardsList.map((award) => (
+                                        <li key={award.id}>
+                                            {award.name} ({award.year}) - {award.category}
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-gray-400 mt-2">Không có dữ liệu giải thưởng.</p>
+                            )}
                         </div>
                     </div>
                 </div>
